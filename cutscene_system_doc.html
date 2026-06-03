@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cutscene System — Game Dev Docs</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #0d0f1a;
+    --bg2: #131626;
+    --bg3: #1a1f35;
+    --accent: #ff9f43;
+    --accent2: #ff6b6b;
+    --accent3: #a8ff78;
+    --accent4: #00e5ff;
+    --text: #c8d0e8;
+    --text-dim: #6b7599;
+    --border: #2a3050;
+    --code-bg: #0a0c16;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    line-height: 1.7;
+    min-height: 100vh;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,159,67,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,159,67,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+    position: relative;
+    z-index: 1;
+  }
+
+  header {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 32px;
+    margin-bottom: 48px;
+  }
+
+  .tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: block;
+  }
+
+  h1 {
+    font-size: clamp(28px, 5vw, 44px);
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.1;
+    margin-bottom: 16px;
+  }
+
+  h1 span { color: var(--accent); }
+
+  .subtitle {
+    color: var(--text-dim);
+    font-size: 14px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .toc {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    padding: 20px 24px;
+    margin-bottom: 48px;
+    border-radius: 2px;
+  }
+
+  .toc-title {
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--accent);
+    font-family: 'JetBrains Mono', monospace;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+  }
+
+  .toc a {
+    display: block;
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 13px;
+    padding: 3px 0;
+    font-family: 'JetBrains Mono', monospace;
+    transition: color 0.2s;
+  }
+
+  .toc a:hover { color: var(--accent); }
+  .toc a::before { content: '→ '; color: var(--accent); }
+
+  section { margin-bottom: 56px; }
+
+  h2 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  h2 .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+    background: rgba(255,159,67,0.08);
+    padding: 2px 8px;
+    border: 1px solid rgba(255,159,67,0.2);
+  }
+
+  h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--accent3);
+    margin: 24px 0 10px;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 1px;
+  }
+
+  p {
+    font-size: 14px;
+    color: var(--text);
+    margin-bottom: 14px;
+  }
+
+  .callout {
+    padding: 16px 20px;
+    margin: 20px 0;
+    border-radius: 2px;
+    font-size: 13px;
+    border-left: 3px solid;
+  }
+
+  .callout.info { background: rgba(255,159,67,0.06); border-color: var(--accent); }
+  .callout.tip { background: rgba(168,255,120,0.06); border-color: var(--accent3); }
+  .callout.warning { background: rgba(255,107,107,0.06); border-color: var(--accent2); }
+  .callout.blue { background: rgba(0,229,255,0.06); border-color: var(--accent4); }
+
+  .callout strong {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .callout.info strong { color: var(--accent); }
+  .callout.tip strong { color: var(--accent3); }
+  .callout.warning strong { color: var(--accent2); }
+  .callout.blue strong { color: var(--accent4); }
+
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 20px;
+    overflow-x: auto;
+    margin: 16px 0;
+    position: relative;
+  }
+
+  pre::before {
+    content: attr(data-lang);
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+  }
+
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.9;
+    color: var(--text);
+  }
+
+  .kw { color: #c792ea; }
+  .fn { color: #82aaff; }
+  .str { color: #c3e88d; }
+  .cm { color: #546e7a; font-style: italic; }
+  .nm { color: #f78c6c; }
+  .vr { color: var(--accent); }
+  .sg { color: #ff9f43; }
+
+  .table-wrap {
+    overflow-x: auto;
+    margin: 16px 0;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  th {
+    background: var(--bg3);
+    color: var(--accent);
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: top;
+  }
+
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+
+  td.auto { color: var(--accent3); }
+  td.player { color: var(--accent); }
+  td.parallel-y { color: #82aaff; }
+  td.parallel-n { color: var(--text-dim); }
+
+  /* Flow */
+  .flow {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 16px 0;
+  }
+
+  .flow-box {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    padding: 8px 14px;
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text);
+    border-radius: 2px;
+    white-space: nowrap;
+  }
+
+  .flow-box.auto { border-color: var(--accent3); color: var(--accent3); }
+  .flow-box.player { border-color: var(--accent); color: var(--accent); }
+  .flow-box.parallel { border-color: #82aaff; color: #82aaff; }
+
+  .flow-arrow { color: var(--text-dim); font-size: 16px; }
+
+  /* Timeline */
+  .timeline {
+    margin: 20px 0;
+    border-left: 2px solid var(--border);
+    padding-left: 20px;
+  }
+
+  .timeline-item {
+    position: relative;
+    margin-bottom: 16px;
+    font-size: 13px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -25px;
+    top: 6px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--border);
+  }
+
+  .timeline-item.auto::before { background: var(--accent3); }
+  .timeline-item.player::before { background: var(--accent); }
+  .timeline-item.parallel::before { background: #82aaff; }
+
+  .timeline-item .label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    margin-bottom: 2px;
+  }
+
+  .timeline-item.auto .label { color: var(--accent3); }
+  .timeline-item.player .label { color: var(--accent); }
+  .timeline-item.parallel .label { color: #82aaff; }
+
+  .timeline-item .desc { color: var(--text); }
+
+  .checklist {
+    list-style: none;
+    margin: 16px 0;
+  }
+
+  .checklist li {
+    font-size: 13px;
+    padding: 6px 0;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text);
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .checklist li::before { content: '✓'; color: var(--accent3); flex-shrink: 0; }
+
+  .badge {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 2px;
+    letter-spacing: 1px;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+
+  .badge.system { background: rgba(255,159,67,0.1); color: var(--accent); border: 1px solid rgba(255,159,67,0.2); }
+  .badge.concept { background: rgba(168,255,120,0.1); color: var(--accent3); border: 1px solid rgba(168,255,120,0.2); }
+
+  footer {
+    border-top: 1px solid var(--border);
+    padding-top: 24px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <span class="tag">Godot 4 · 3D · GDScript · Game Systems</span>
+    <h1><span>Cutscene</span><br>System Documentation</h1>
+    <p class="subtitle">// personal reference · 3D in-engine scripted event sequences</p>
+  </header>
+
+  <nav class="toc">
+    <div class="toc-title">Contents</div>
+    <a href="#concept">01 — What is a Cutscene System</a>
+    <a href="#command">02 — Command Queue Concept</a>
+    <a href="#commands">03 — Command Types</a>
+    <a href="#sequential">04 — Sequential Execution (await)</a>
+    <a href="#parallel">05 — Parallel Execution</a>
+    <a href="#sync">06 — Sync Command</a>
+    <a href="#dialog">07 — Combining with Dialog System</a>
+    <a href="#manager">08 — Full Cutscene Manager Code</a>
+    <a href="#character">09 — Character Move Code</a>
+    <a href="#example">10 — Full Example Scene</a>
+    <a href="#summary">11 — Summary</a>
+  </nav>
+
+  <!-- 01 CONCEPT -->
+  <section id="concept">
+    <h2><span class="num">01</span> What is a Cutscene System</h2>
+    <p>An in-engine cutscene (also called <strong>scripted event</strong> or <strong>event scene</strong>) is a sequence of automated actions — character movement, expressions, dialog — that plays without player control, except when dialog appears.</p>
+
+    <div class="callout info">
+      <strong>Term Reference</strong>
+      In-engine cutscene · Scripted sequence · Event scene · Story event — all refer to the same thing. Not a video file, uses actual game graphics and characters.
+    </div>
+
+    <h3>// Control flow</h3>
+    <div class="flow">
+      <div class="flow-box auto">Automatic actions</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box player">Dialog (player presses next)</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box auto">Automatic continues</div>
+    </div>
+
+    <p>The cutscene <strong>freezes</strong> when dialog opens and waits for the player to finish reading. Once dialog closes, automatic execution resumes.</p>
+  </section>
+
+  <!-- 02 COMMAND QUEUE -->
+  <section id="command">
+    <h2><span class="num">02</span> Command Queue Concept <span class="badge concept">CONCEPT</span></h2>
+    <p>The entire cutscene is stored as an <strong>array of command dictionaries</strong>. The manager processes them one by one, executing each before moving to the next.</p>
+
+    <pre data-lang="GDScript"><code><span class="cm"># Example: Event Scene 07 — all positions are Vector3(x, y, z)</span>
+<span class="kw">var</span> <span class="vr">queue</span> = [
+    { <span class="str">"type"</span>: <span class="str">"move"</span>, <span class="str">"target"</span>: <span class="str">"guard"</span>, <span class="str">"to"</span>: Vector3(<span class="nm">300</span>, <span class="nm">0</span>, <span class="nm">200</span>), <span class="str">"speed"</span>: <span class="str">"walk"</span>, <span class="str">"parallel"</span>: <span class="kw">false</span> },
+    { <span class="str">"type"</span>: <span class="str">"expression"</span>, <span class="str">"target"</span>: <span class="str">"guard"</span>, <span class="str">"emote"</span>: <span class="str">"exclamation"</span>, <span class="str">"parallel"</span>: <span class="kw">false</span> },
+    { <span class="str">"type"</span>: <span class="str">"dialog"</span>, <span class="str">"dialog_id"</span>: <span class="nm">189</span>, <span class="str">"parallel"</span>: <span class="kw">false</span> },
+    { <span class="str">"type"</span>: <span class="str">"move"</span>, <span class="str">"target"</span>: <span class="str">"hero"</span>, <span class="str">"to"</span>: Vector3(<span class="nm">600</span>, <span class="nm">0</span>, <span class="nm">200</span>), <span class="str">"speed"</span>: <span class="str">"run"</span>, <span class="str">"parallel"</span>: <span class="kw">false</span> },
+    { <span class="str">"type"</span>: <span class="str">"spawn"</span>, <span class="str">"target"</span>: <span class="str">"gate_guard"</span>, <span class="str">"at"</span>: Vector3(<span class="nm">700</span>, <span class="nm">0</span>, <span class="nm">200</span>), <span class="str">"parallel"</span>: <span class="kw">false</span> },
+    { <span class="str">"type"</span>: <span class="str">"dialog"</span>, <span class="str">"dialog_id"</span>: <span class="nm">190</span>, <span class="str">"parallel"</span>: <span class="kw">false</span> },
+]</code></pre>
+
+    <div class="callout tip">
+      <strong>Same thinking as your other systems</strong>
+      Array of dictionaries — same pattern as your dialog system and door table. You already understand this structure!
+    </div>
+  </section>
+
+  <!-- 03 COMMAND TYPES -->
+  <section id="commands">
+    <h2><span class="num">03</span> Command Types</h2>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>type</th>
+            <th>parameters</th>
+            <th>control</th>
+            <th>parallel support</th>
+            <th>description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>move</td>
+            <td>target, to, speed</td>
+            <td class="auto">automatic</td>
+            <td class="parallel-y">yes</td>
+            <td>move character to position (walk/run)</td>
+          </tr>
+          <tr>
+            <td>wait</td>
+            <td>duration</td>
+            <td class="auto">automatic</td>
+            <td class="parallel-n">no</td>
+            <td>pause for X seconds</td>
+          </tr>
+          <tr>
+            <td>expression</td>
+            <td>target, emote</td>
+            <td class="auto">automatic</td>
+            <td class="parallel-y">yes</td>
+            <td>show emote bubble (!, ?, ♥ etc)</td>
+          </tr>
+          <tr>
+            <td>dialog</td>
+            <td>dialog_id</td>
+            <td class="player">player (press next)</td>
+            <td class="parallel-n">no</td>
+            <td>open dialog system, freeze until done</td>
+          </tr>
+          <tr>
+            <td>spawn</td>
+            <td>target, at</td>
+            <td class="auto">automatic</td>
+            <td class="parallel-y">yes</td>
+            <td>make character appear at position</td>
+          </tr>
+          <tr>
+            <td>despawn</td>
+            <td>target</td>
+            <td class="auto">automatic</td>
+            <td class="parallel-y">yes</td>
+            <td>hide or remove character</td>
+          </tr>
+          <tr>
+            <td>sync</td>
+            <td>—</td>
+            <td class="auto">automatic</td>
+            <td class="parallel-n">no</td>
+            <td>wait for ALL parallel actions to finish</td>
+          </tr>
+          <tr>
+            <td>camera</td>
+            <td>target / position</td>
+            <td class="auto">automatic</td>
+            <td class="parallel-y">yes</td>
+            <td>pan camera to position or follow target</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 04 SEQUENTIAL -->
+  <section id="sequential">
+    <h2><span class="num">04</span> Sequential Execution <span class="badge concept">AWAIT</span></h2>
+    <p>By default all commands are sequential — each one waits until fully finished before the next starts. This uses Godot's <code>await</code> keyword.</p>
+
+    <pre data-lang="GDScript"><code><span class="cm"># Sequential: guard walks, THEN dialog opens</span>
+{ <span class="str">"type"</span>: <span class="str">"move"</span>, <span class="str">"target"</span>: <span class="str">"guard"</span>, <span class="str">"to"</span>: Vector2(<span class="nm">300</span>,<span class="nm">200</span>), <span class="str">"parallel"</span>: <span class="kw">false</span> }
+{ <span class="str">"type"</span>: <span class="str">"dialog"</span>, <span class="str">"dialog_id"</span>: <span class="nm">189</span>, <span class="str">"parallel"</span>: <span class="kw">false</span> }
+
+<span class="cm"># In manager:</span>
+<span class="kw">var</span> <span class="vr">move_action</span> = <span class="vr">target</span>.<span class="fn">move_to</span>(cmd[<span class="str">"to"</span>], cmd[<span class="str">"speed"</span>])
+<span class="kw">await</span> <span class="vr">move_action</span>  <span class="cm"># ← waits here until character arrives</span>
+<span class="fn">play_next</span>()        <span class="cm"># ← only then continues</span></code></pre>
+
+    <div class="callout blue">
+      <strong>How await works</strong>
+      await pauses execution at that line until the signal fires or coroutine finishes. Nothing else is blocked — only this function waits. The rest of the game continues normally.
+    </div>
+  </section>
+
+  <!-- 05 PARALLEL -->
+  <section id="parallel">
+    <h2><span class="num">05</span> Parallel Execution <span class="badge concept">PARALLEL</span></h2>
+    <p>When <code>parallel: true</code>, the command starts and immediately moves to the next without waiting. Used when two characters should move at the same time.</p>
+
+    <pre data-lang="GDScript"><code><span class="cm"># Parallel: both guards move at same time</span>
+{ <span class="str">"type"</span>: <span class="str">"move"</span>, <span class="str">"target"</span>: <span class="str">"guard_01"</span>, <span class="str">"to"</span>: Vector2(<span class="nm">300</span>,<span class="nm">200</span>), <span class="str">"speed"</span>: <span class="str">"walk"</span>, <span class="str">"parallel"</span>: <span class="kw">true</span> }
+{ <span class="str">"type"</span>: <span class="str">"move"</span>, <span class="str">"target"</span>: <span class="str">"guard_02"</span>, <span class="str">"to"</span>: Vector2(<span class="nm">500</span>,<span class="nm">200</span>), <span class="str">"speed"</span>: <span class="str">"walk"</span>, <span class="str">"parallel"</span>: <span class="kw">true</span> }
+{ <span class="str">"type"</span>: <span class="str">"sync"</span> }  <span class="cm"># ← wait for BOTH to finish</span>
+{ <span class="str">"type"</span>: <span class="str">"dialog"</span>, <span class="str">"dialog_id"</span>: <span class="nm">189</span>, <span class="str">"parallel"</span>: <span class="kw">false</span> }
+
+<span class="cm"># In manager:</span>
+<span class="kw">if</span> <span class="vr">is_parallel</span>:
+    <span class="vr">target</span>.<span class="fn">move_to</span>(...)  <span class="cm"># start but dont await</span>
+    <span class="fn">play_next</span>()          <span class="cm"># immediately continue to next command</span>
+<span class="kw">else</span>:
+    <span class="kw">await</span> <span class="vr">target</span>.<span class="fn">move_to</span>(...)
+    <span class="fn">play_next</span>()</code></pre>
+  </section>
+
+  <!-- 06 SYNC -->
+  <section id="sync">
+    <h2><span class="num">06</span> Sync Command</h2>
+    <p>Sync waits for all currently running parallel actions to finish before continuing. Essential after a group of parallel commands.</p>
+
+    <pre data-lang="GDScript"><code><span class="kw">var</span> <span class="vr">parallel_actions</span>: Array = []
+
+<span class="cm"># When parallel command starts, track it</span>
+<span class="kw">func</span> <span class="fn">start_parallel</span>(<span class="vr">action</span>):
+    <span class="vr">parallel_actions</span>.<span class="fn">append</span>(<span class="vr">action</span>)
+
+<span class="cm"># Sync command waits for all parallel to finish</span>
+<span class="str">"sync"</span>:
+    <span class="kw">for</span> <span class="vr">action</span> <span class="kw">in</span> <span class="vr">parallel_actions</span>:
+        <span class="kw">await</span> <span class="vr">action</span>
+    <span class="vr">parallel_actions</span>.<span class="fn">clear</span>()
+    <span class="fn">play_next</span>()</code></pre>
+
+    <div class="callout warning">
+      <strong>Remember</strong>
+      Always add sync after a group of parallel commands if the next command depends on them finishing. Forgetting sync causes dialog to open before characters arrive.
+    </div>
+  </section>
+
+  <!-- 07 DIALOG -->
+  <section id="dialog">
+    <h2><span class="num">07</span> Combining with Dialog System</h2>
+    <p>Dialog system must emit a <strong>signal</strong> when player finishes all lines. The cutscene manager awaits this signal — freezing until player presses next on the last line.</p>
+
+    <h3>// Dialog system requirement</h3>
+    <pre data-lang="GDScript"><code><span class="cm"># DialogSystem.gd — must have this signal</span>
+<span class="kw">extends</span> Node
+
+<span class="sg">signal</span> <span class="fn">dialog_finished</span>
+
+<span class="kw">func</span> <span class="fn">start</span>(<span class="vr">dialog_id</span>: <span class="kw">int</span>):
+    <span class="cm"># load dialog lines by id</span>
+    <span class="cm"># show dialog UI</span>
+    <span class="cm"># when player presses next on LAST line:</span>
+    <span class="fn">dialog_finished</span>.<span class="fn">emit</span>()</code></pre>
+
+    <h3>// Cutscene manager handles dialog command</h3>
+    <pre data-lang="GDScript"><code><span class="str">"dialog"</span>:
+    DialogSystem.<span class="fn">start</span>(cmd[<span class="str">"dialog_id"</span>])
+    <span class="kw">await</span> DialogSystem.<span class="vr">dialog_finished</span>  <span class="cm"># ← freeze here</span>
+    <span class="fn">play_next</span>()                          <span class="cm"># ← resume after player done</span></code></pre>
+
+    <h3>// Control flow with dialog</h3>
+    <div class="timeline">
+      <div class="timeline-item auto">
+        <div class="label">AUTOMATIC</div>
+        <div class="desc">guard walks to hero position</div>
+      </div>
+      <div class="timeline-item auto">
+        <div class="label">AUTOMATIC</div>
+        <div class="desc">exclamation mark appears above guard</div>
+      </div>
+      <div class="timeline-item player">
+        <div class="label">PLAYER CONTROL — cutscene freezes</div>
+        <div class="desc">dialog 189 opens → player reads → presses next → dialog_finished emits</div>
+      </div>
+      <div class="timeline-item auto">
+        <div class="label">AUTOMATIC — resumes</div>
+        <div class="desc">hero runs toward gate</div>
+      </div>
+      <div class="timeline-item auto">
+        <div class="label">AUTOMATIC</div>
+        <div class="desc">gate guard spawns from side</div>
+      </div>
+      <div class="timeline-item player">
+        <div class="label">PLAYER CONTROL — cutscene freezes</div>
+        <div class="desc">dialog 190 opens → player reads → presses next → dialog_finished emits</div>
+      </div>
+      <div class="timeline-item auto">
+        <div class="label">AUTOMATIC — resumes</div>
+        <div class="desc">cutscene ends, player control returns</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 08 MANAGER -->
+  <section id="manager">
+    <h2><span class="num">08</span> Full Cutscene Manager Code <span class="badge system">SYSTEM</span></h2>
+
+    <pre data-lang="GDScript"><code><span class="cm"># CutsceneManager.gd — Autoload</span>
+<span class="kw">extends</span> Node
+
+<span class="kw">var</span> <span class="vr">queue</span>: Array = []
+<span class="kw">var</span> <span class="vr">is_playing</span>: <span class="kw">bool</span> = <span class="kw">false</span>
+<span class="kw">var</span> <span class="vr">parallel_actions</span>: Array = []
+
+<span class="kw">func</span> <span class="fn">play</span>(<span class="vr">commands</span>: Array):
+    <span class="vr">queue</span> = <span class="vr">commands</span>.duplicate()
+    <span class="vr">is_playing</span> = <span class="kw">true</span>
+    <span class="fn">play_next</span>()
+
+<span class="kw">func</span> <span class="fn">play_next</span>():
+    <span class="kw">if</span> <span class="vr">queue</span>.<span class="fn">is_empty</span>():
+        <span class="vr">is_playing</span> = <span class="kw">false</span>
+        <span class="fn">on_cutscene_end</span>()
+        <span class="kw">return</span>
+
+    <span class="kw">var</span> <span class="vr">cmd</span> = <span class="vr">queue</span>.<span class="fn">pop_front</span>()
+    <span class="kw">var</span> <span class="vr">is_parallel</span> = cmd.<span class="fn">get</span>(<span class="str">"parallel"</span>, <span class="kw">false</span>)
+
+    <span class="kw">match</span> cmd[<span class="str">"type"</span>]:
+
+        <span class="str">"move"</span>:
+            <span class="kw">var</span> <span class="vr">target</span> = <span class="fn">get_node</span>(cmd[<span class="str">"target"</span>])
+            <span class="kw">var</span> <span class="vr">action</span> = <span class="vr">target</span>.<span class="fn">move_to</span>(cmd[<span class="str">"to"</span>], cmd[<span class="str">"speed"</span>])
+            <span class="kw">if</span> <span class="vr">is_parallel</span>:
+                <span class="vr">parallel_actions</span>.<span class="fn">append</span>(<span class="vr">action</span>)
+                <span class="fn">play_next</span>()
+            <span class="kw">else</span>:
+                <span class="kw">await</span> <span class="vr">action</span>
+                <span class="fn">play_next</span>()
+
+        <span class="str">"wait"</span>:
+            <span class="kw">await</span> get_tree().<span class="fn">create_timer</span>(cmd[<span class="str">"duration"</span>]).<span class="vr">timeout</span>
+            <span class="fn">play_next</span>()
+
+        <span class="str">"expression"</span>:
+            <span class="kw">var</span> <span class="vr">target</span> = <span class="fn">get_node</span>(cmd[<span class="str">"target"</span>])
+            <span class="vr">target</span>.<span class="fn">show_emote</span>(cmd[<span class="str">"emote"</span>])
+            <span class="kw">if</span> <span class="vr">is_parallel</span>:
+                <span class="fn">play_next</span>()
+            <span class="kw">else</span>:
+                <span class="kw">await</span> get_tree().<span class="fn">create_timer</span>(<span class="nm">1.0</span>).<span class="vr">timeout</span>
+                <span class="fn">play_next</span>()
+
+        <span class="str">"dialog"</span>:
+            DialogSystem.<span class="fn">start</span>(cmd[<span class="str">"dialog_id"</span>])
+            <span class="kw">await</span> DialogSystem.<span class="vr">dialog_finished</span>
+            <span class="fn">play_next</span>()
+
+        <span class="str">"spawn"</span>:
+            <span class="kw">var</span> <span class="vr">target</span> = <span class="fn">get_node</span>(cmd[<span class="str">"target"</span>])
+            <span class="vr">target</span>.position = cmd[<span class="str">"at"</span>]
+            <span class="vr">target</span>.visible = <span class="kw">true</span>
+            <span class="fn">play_next</span>()
+
+        <span class="str">"despawn"</span>:
+            <span class="kw">var</span> <span class="vr">target</span> = <span class="fn">get_node</span>(cmd[<span class="str">"target"</span>])
+            <span class="vr">target</span>.visible = <span class="kw">false</span>
+            <span class="fn">play_next</span>()
+
+        <span class="str">"sync"</span>:
+            <span class="kw">for</span> <span class="vr">action</span> <span class="kw">in</span> <span class="vr">parallel_actions</span>:
+                <span class="kw">await</span> <span class="vr">action</span>
+            <span class="vr">parallel_actions</span>.<span class="fn">clear</span>()
+            <span class="fn">play_next</span>()
+
+<span class="kw">func</span> <span class="fn">on_cutscene_end</span>():
+    <span class="cm"># return player control</span>
+    <span class="cm"># re-enable player input</span>
+    <span class="fn">print</span>(<span class="str">"Cutscene finished"</span>)</code></pre>
+  </section>
+
+  <!-- 09 CHARACTER -->
+  <section id="character">
+    <h2><span class="num">09</span> Character Move Code</h2>
+
+    <pre data-lang="GDScript"><code><span class="cm"># Character.gd — attach to hero, guard, NPC etc</span>
+<span class="kw">extends</span> CharacterBody3D
+
+<span class="kw">const</span> <span class="vr">WALK_SPEED</span> = <span class="nm">80.0</span>
+<span class="kw">const</span> <span class="vr">RUN_SPEED</span> = <span class="nm">180.0</span>
+
+<span class="kw">func</span> <span class="fn">move_to</span>(<span class="vr">destination</span>: Vector3, <span class="vr">speed_type</span>: String):
+    <span class="kw">var</span> <span class="vr">speed</span> = <span class="vr">WALK_SPEED</span> <span class="kw">if</span> <span class="vr">speed_type</span> == <span class="str">"walk"</span> <span class="kw">else</span> <span class="vr">RUN_SPEED</span>
+
+    <span class="cm"># set animation</span>
+    <span class="vr">$AnimationPlayer</span>.<span class="fn">play</span>(<span class="vr">speed_type</span>)
+
+    <span class="cm"># move until close enough — Vector3.move_toward</span>
+    <span class="kw">while</span> global_position.<span class="fn">distance_to</span>(<span class="vr">destination</span>) > <span class="nm">0.1</span>:
+        global_position = global_position.<span class="fn">move_toward</span>(<span class="vr">destination</span>, <span class="vr">speed</span> * get_process_delta_time())
+        <span class="kw">await</span> get_tree().<span class="vr">process_frame</span>
+
+    <span class="cm"># snap to exact position</span>
+    global_position = <span class="vr">destination</span>
+
+    <span class="cm"># return to idle animation</span>
+    <span class="vr">$AnimationPlayer</span>.<span class="fn">play</span>(<span class="str">"idle"</span>)
+
+<span class="kw">func</span> <span class="fn">show_emote</span>(<span class="vr">emote_type</span>: String):
+    <span class="vr">$EmoteBubble</span>.texture = <span class="fn">load</span>(<span class="str">"res://emotes/"</span> + <span class="vr">emote_type</span> + <span class="str">".png"</span>)
+    <span class="vr">$EmoteBubble</span>.visible = <span class="kw">true</span>
+    <span class="kw">await</span> get_tree().<span class="fn">create_timer</span>(<span class="nm">1.5</span>).<span class="vr">timeout</span>
+    <span class="vr">$EmoteBubble</span>.visible = <span class="kw">false</span></code></pre>
+  </section>
+
+  <!-- 10 EXAMPLE -->
+  <section id="example">
+    <h2><span class="num">10</span> Full Example — Event Scene 07</h2>
+    <p>Guard approaches hero → expression → dialog → hero runs → gate guard spawns → dialog.</p>
+
+    <pre data-lang="GDScript"><code><span class="cm"># EventScene07.gd</span>
+<span class="kw">func</span> <span class="fn">_ready</span>():
+    <span class="cm"># disable player input during cutscene</span>
+    <span class="vr">$Hero</span>.<span class="fn">set_process_input</span>(<span class="kw">false</span>)
+
+    CutsceneManager.<span class="fn">play</span>([
+        <span class="cm"># guard walks toward hero — Vector3(x, y, z)</span>
+        { <span class="str">"type"</span>: <span class="str">"move"</span>, <span class="str">"target"</span>: <span class="str">"Guard"</span>, <span class="str">"to"</span>: Vector3(<span class="nm">300</span>,<span class="nm">0</span>,<span class="nm">200</span>), <span class="str">"speed"</span>: <span class="str">"walk"</span>, <span class="str">"parallel"</span>: <span class="kw">false</span> },
+
+        <span class="cm"># exclamation mark appears</span>
+        { <span class="str">"type"</span>: <span class="str">"expression"</span>, <span class="str">"target"</span>: <span class="str">"Guard"</span>, <span class="str">"emote"</span>: <span class="str">"exclamation"</span>, <span class="str">"parallel"</span>: <span class="kw">false</span> },
+
+        <span class="cm"># dialog opens — player reads and presses next</span>
+        { <span class="str">"type"</span>: <span class="str">"dialog"</span>, <span class="str">"dialog_id"</span>: <span class="nm">189</span>, <span class="str">"parallel"</span>: <span class="kw">false</span> },
+
+        <span class="cm"># hero runs to gate</span>
+        { <span class="str">"type"</span>: <span class="str">"move"</span>, <span class="str">"target"</span>: <span class="str">"Hero"</span>, <span class="str">"to"</span>: Vector3(<span class="nm">600</span>,<span class="nm">0</span>,<span class="nm">200</span>), <span class="str">"speed"</span>: <span class="str">"run"</span>, <span class="str">"parallel"</span>: <span class="kw">false</span> },
+
+        <span class="cm"># gate guard appears from side</span>
+        { <span class="str">"type"</span>: <span class="str">"spawn"</span>, <span class="str">"target"</span>: <span class="str">"GateGuard"</span>, <span class="str">"at"</span>: Vector3(<span class="nm">700</span>,<span class="nm">0</span>,<span class="nm">200</span>), <span class="str">"parallel"</span>: <span class="kw">false</span> },
+        { <span class="str">"type"</span>: <span class="str">"wait"</span>, <span class="str">"duration"</span>: <span class="nm">0.3</span>, <span class="str">"parallel"</span>: <span class="kw">false</span> },
+
+        <span class="cm"># second dialog</span>
+        { <span class="str">"type"</span>: <span class="str">"dialog"</span>, <span class="str">"dialog_id"</span>: <span class="nm">190</span>, <span class="str">"parallel"</span>: <span class="kw">false</span> },
+    ])
+
+    <span class="cm"># re-enable player after cutscene</span>
+    <span class="kw">await</span> CutsceneManager.<span class="vr">cutscene_ended</span>
+    <span class="vr">$Hero</span>.<span class="fn">set_process_input</span>(<span class="kw">true</span>)</code></pre>
+
+    <h3>// Parallel example — two guards surround hero</h3>
+    <pre data-lang="GDScript"><code>CutsceneManager.<span class="fn">play</span>([
+    <span class="cm"># both guards move at same time — Vector3(x, y, z)</span>
+    { <span class="str">"type"</span>: <span class="str">"move"</span>, <span class="str">"target"</span>: <span class="str">"Guard01"</span>, <span class="str">"to"</span>: Vector3(<span class="nm">250</span>,<span class="nm">0</span>,<span class="nm">200</span>), <span class="str">"speed"</span>: <span class="str">"walk"</span>, <span class="str">"parallel"</span>: <span class="kw">true</span> },
+    { <span class="str">"type"</span>: <span class="str">"move"</span>, <span class="str">"target"</span>: <span class="str">"Guard02"</span>, <span class="str">"to"</span>: Vector3(<span class="nm">550</span>,<span class="nm">0</span>,<span class="nm">200</span>), <span class="str">"speed"</span>: <span class="str">"walk"</span>, <span class="str">"parallel"</span>: <span class="kw">true</span> },
+
+    <span class="cm"># wait for both to arrive</span>
+    { <span class="str">"type"</span>: <span class="str">"sync"</span> },
+
+    <span class="cm"># both show exclamation at same time</span>
+    { <span class="str">"type"</span>: <span class="str">"expression"</span>, <span class="str">"target"</span>: <span class="str">"Guard01"</span>, <span class="str">"emote"</span>: <span class="str">"exclamation"</span>, <span class="str">"parallel"</span>: <span class="kw">true</span> },
+    { <span class="str">"type"</span>: <span class="str">"expression"</span>, <span class="str">"target"</span>: <span class="str">"Guard02"</span>, <span class="str">"emote"</span>: <span class="str">"exclamation"</span>, <span class="str">"parallel"</span>: <span class="kw">false</span> },
+
+    { <span class="str">"type"</span>: <span class="str">"dialog"</span>, <span class="str">"dialog_id"</span>: <span class="nm">191</span>, <span class="str">"parallel"</span>: <span class="kw">false</span> },
+])</code></pre>
+  </section>
+
+  <!-- 11 SUMMARY -->
+  <section id="summary">
+    <h2><span class="num">11</span> Summary</h2>
+
+    <ul class="checklist">
+      <li>Cutscene is an <strong>array of command dictionaries</strong> processed one by one</li>
+      <li><strong>parallel: false</strong> → await until done before next command</li>
+      <li><strong>parallel: true</strong> → start and immediately continue to next command</li>
+      <li><strong>sync</strong> command → wait for all running parallel actions to finish</li>
+      <li><strong>dialog</strong> command freezes cutscene — resumes when dialog_finished signal fires</li>
+      <li>Always <strong>disable player input</strong> at cutscene start, re-enable at end</li>
+      <li>DialogSystem must emit <strong>dialog_finished signal</strong> on last line</li>
+      <li>Add more command types anytime — system scales without restructuring</li>
+    </ul>
+
+    <div class="callout tip">
+      <strong>Build Order Suggestion</strong>
+      Start with move + dialog only. Test with a simple 2-command scene. Add expression, spawn, sync later once the core queue works correctly.
+    </div>
+  </section>
+
+  <footer>
+    <span>// cutscene-system · godot 4 · 3d · gdscript</span>
+    <span>personal dev docs · keep for reference</span>
+  </footer>
+
+</div>
+</body>
+</html>

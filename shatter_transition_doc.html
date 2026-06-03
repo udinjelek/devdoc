@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shatter Transition System — Game Dev Docs</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #1a0d0d;
+    --bg2: #221111;
+    --bg3: #2d1515;
+    --accent: #ff4757;
+    --accent2: #ffa502;
+    --accent3: #a8ff78;
+    --accent4: #00e5ff;
+    --text: #e8caca;
+    --text-dim: #7a5555;
+    --border: #3d1f1f;
+    --code-bg: #0f0808;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    line-height: 1.7;
+    min-height: 100vh;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,71,87,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,71,87,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+    position: relative;
+    z-index: 1;
+  }
+
+  header {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 32px;
+    margin-bottom: 48px;
+  }
+
+  .tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: block;
+  }
+
+  h1 {
+    font-size: clamp(28px, 5vw, 44px);
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.1;
+    margin-bottom: 16px;
+  }
+
+  h1 span { color: var(--accent); }
+
+  .subtitle {
+    color: var(--text-dim);
+    font-size: 14px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .toc {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    padding: 20px 24px;
+    margin-bottom: 48px;
+    border-radius: 2px;
+  }
+
+  .toc-title {
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--accent);
+    font-family: 'JetBrains Mono', monospace;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+  }
+
+  .toc a {
+    display: block;
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 13px;
+    padding: 3px 0;
+    font-family: 'JetBrains Mono', monospace;
+    transition: color 0.2s;
+  }
+
+  .toc a:hover { color: var(--accent); }
+  .toc a::before { content: '→ '; color: var(--accent); }
+
+  section { margin-bottom: 56px; }
+
+  h2 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  h2 .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+    background: rgba(255,71,87,0.08);
+    padding: 2px 8px;
+    border: 1px solid rgba(255,71,87,0.2);
+  }
+
+  h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--accent2);
+    margin: 24px 0 10px;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 1px;
+  }
+
+  p {
+    font-size: 14px;
+    color: var(--text);
+    margin-bottom: 14px;
+  }
+
+  .callout {
+    padding: 16px 20px;
+    margin: 20px 0;
+    border-radius: 2px;
+    font-size: 13px;
+    border-left: 3px solid;
+  }
+
+  .callout.info { background: rgba(255,71,87,0.06); border-color: var(--accent); }
+  .callout.tip { background: rgba(168,255,120,0.06); border-color: var(--accent3); }
+  .callout.warning { background: rgba(255,165,2,0.06); border-color: var(--accent2); }
+  .callout.blue { background: rgba(0,229,255,0.06); border-color: var(--accent4); }
+
+  .callout strong {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .callout.info strong { color: var(--accent); }
+  .callout.tip strong { color: var(--accent3); }
+  .callout.warning strong { color: var(--accent2); }
+  .callout.blue strong { color: var(--accent4); }
+
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 20px;
+    overflow-x: auto;
+    margin: 16px 0;
+    position: relative;
+  }
+
+  pre::before {
+    content: attr(data-lang);
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+  }
+
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.9;
+    color: var(--text);
+  }
+
+  .kw { color: #c792ea; }
+  .fn { color: #82aaff; }
+  .str { color: #c3e88d; }
+  .cm { color: #4a2f2f; font-style: italic; }
+  .nm { color: #f78c6c; }
+  .vr { color: var(--accent); }
+  .bl { color: #ff9f43; }
+
+  .table-wrap {
+    overflow-x: auto;
+    margin: 16px 0;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  th {
+    background: var(--bg3);
+    color: var(--accent);
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: top;
+  }
+
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+
+  td.yes { color: var(--accent3); }
+  td.opt { color: var(--accent2); }
+
+  /* Node tree */
+  .nodetree {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    padding: 20px 24px;
+    margin: 16px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 2;
+  }
+
+  .nodetree .root { color: var(--accent); }
+  .nodetree .child { color: var(--text); padding-left: 20px; }
+  .nodetree .child2 { color: var(--text-dim); padding-left: 40px; }
+  .nodetree .note { color: #4a2f2f; font-style: italic; }
+
+  /* Flow */
+  .flow {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 16px 0;
+  }
+
+  .flow-box {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    padding: 8px 14px;
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text);
+    border-radius: 2px;
+    white-space: nowrap;
+  }
+
+  .flow-box.red { border-color: var(--accent); color: var(--accent); }
+  .flow-box.orange { border-color: var(--accent2); color: var(--accent2); }
+  .flow-box.green { border-color: var(--accent3); color: var(--accent3); }
+  .flow-box.blue { border-color: var(--accent4); color: var(--accent4); }
+
+  .flow-arrow { color: var(--text-dim); font-size: 16px; }
+
+  .checklist {
+    list-style: none;
+    margin: 16px 0;
+  }
+
+  .checklist li {
+    font-size: 13px;
+    padding: 6px 0;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text);
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .checklist li::before { content: '✓'; color: var(--accent3); flex-shrink: 0; }
+
+  .badge {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 2px;
+    letter-spacing: 1px;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+
+  .badge.system { background: rgba(255,71,87,0.1); color: var(--accent); border: 1px solid rgba(255,71,87,0.2); }
+  .badge.toggle { background: rgba(255,165,2,0.1); color: var(--accent2); border: 1px solid rgba(255,165,2,0.2); }
+  .badge.key { background: rgba(168,255,120,0.1); color: var(--accent3); border: 1px solid rgba(168,255,120,0.2); }
+
+  footer {
+    border-top: 1px solid var(--border);
+    padding-top: 24px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <span class="tag">Godot 4 · 3D · GDScript · Game Systems</span>
+    <h1><span>Shatter</span><br>Transition System</h1>
+    <p class="subtitle">// personal reference · glass break scene transition · 3D shards · mockup for battle transition</p>
+  </header>
+
+  <nav class="toc">
+    <div class="toc-title">Contents</div>
+    <a href="#concept">01 — Concept & Design Decisions</a>
+    <a href="#settings">02 — Settings & Toggles</a>
+    <a href="#flow">03 — Full Transition Flow</a>
+    <a href="#nodes">04 — Node Structure</a>
+    <a href="#screen">05 — Screen Capture (SubViewport)</a>
+    <a href="#shards">06 — Shard Setup</a>
+    <a href="#material">07 — Unshaded Material (Key Trick)</a>
+    <a href="#explosion">08 — Explosion Impulse Code</a>
+    <a href="#black">09 — Black Background Option</a>
+    <a href="#cleanup">10 — Cleanup & Memory</a>
+    <a href="#manager">11 — Full Transition Manager Code</a>
+    <a href="#summary">12 — Summary</a>
+  </nav>
+
+  <!-- 01 CONCEPT -->
+  <section id="concept">
+    <h2><span class="num">01</span> Concept & Design Decisions</h2>
+    <p>Shatter transition captures the current scene as a screenshot, applies it to flat 3D shard pieces, then shatters them apart revealing the next scene underneath. Inspired by Code Monkey's Unity screen shatter tutorial.</p>
+
+    <div class="callout info">
+      <strong>Current Use</strong>
+      Built as mockup for Town → Village transition. Reuse later for battle transition when battle system is ready. Same system, different scenes.
+    </div>
+
+    <h3>// Key design decisions</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>decision</th><th>choice</th><th>reason</th></tr></thead>
+        <tbody>
+          <tr><td>Shard mesh</td><td class="yes">Flat pre-cut quads</td><td>Simple, no Voronoi fracture needed</td></tr>
+          <tr><td>Shard count</td><td class="yes">25–35 pieces</td><td>Visual sweet spot, light on PC</td></tr>
+          <tr><td>UV mapping</td><td class="yes">Triplanar material</td><td>No Blender needed, seamless texture</td></tr>
+          <tr><td>Shard material</td><td class="yes">UNSHADED</td><td>Next scene lighting won't affect shards</td></tr>
+          <tr><td>Next scene</td><td class="yes">Live, not frozen</td><td>Atmosphere shows through gaps — dramatic</td></tr>
+          <tr><td>Black background</td><td class="opt">Optional (boolean)</td><td>Use for day→night transitions</td></tr>
+          <tr><td>Shard spin</td><td class="yes">3D angular velocity</td><td>Cinematic feel</td></tr>
+          <tr><td>Explosion</td><td class="yes">Radiant from center</td><td>Realistic physics feel</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout key">
+      <strong>The Key Trick — Unshaded Material</strong>
+      Since shards use UNSHADED material, the next scene's lighting (day/night/storm) does NOT affect the shard pieces. Screenshot texture always shows exactly as captured regardless of Village night lighting. This solves the lighting bleed problem completely.
+    </div>
+  </section>
+
+  <!-- 02 SETTINGS -->
+  <section id="settings">
+    <h2><span class="num">02</span> Settings & Toggles <span class="badge toggle">SWITCHABLE</span></h2>
+
+    <pre data-lang="GDScript"><code><span class="cm"># =============================================</span>
+<span class="cm"># SHATTER TRANSITION SETTINGS</span>
+<span class="cm"># =============================================</span>
+
+<span class="cm"># Number of shard pieces (25-35 recommended)</span>
+<span class="kw">var</span> <span class="vr">SHARD_COUNT</span>: <span class="kw">int</span> = <span class="nm">30</span>
+
+<span class="cm"># How far shards fly outward (3D units)</span>
+<span class="kw">var</span> <span class="vr">BLAST_POWER</span>: <span class="kw">float</span> = <span class="nm">15.0</span>
+
+<span class="cm"># Random angular spin on each shard</span>
+<span class="kw">var</span> <span class="vr">SPIN_STRENGTH</span>: <span class="kw">float</span> = <span class="nm">8.0</span>
+
+<span class="cm"># How long shards stay before fading (seconds)</span>
+<span class="kw">var</span> <span class="vr">SHARD_LIFETIME</span>: <span class="kw">float</span> = <span class="nm">1.5</span>
+
+<span class="cm"># How long fade out takes (seconds)</span>
+<span class="kw">var</span> <span class="vr">FADE_DURATION</span>: <span class="kw">float</span> = <span class="nm">0.4</span>
+
+<span class="cm"># Show solid black background between shards</span>
+<span class="cm"># true = black then fade to next scene (good for day→night)</span>
+<span class="cm"># false = next scene visible through gaps immediately (dramatic)</span>
+<span class="kw">var</span> <span class="vr">USE_BLACK_BACKGROUND</span>: <span class="kw">bool</span> = <span class="bl">false</span>
+
+<span class="cm"># If USE_BLACK_BACKGROUND = true, how long to fade black to transparent</span>
+<span class="kw">var</span> <span class="vr">BLACK_FADE_DURATION</span>: <span class="kw">float</span> = <span class="nm">0.5</span>
+
+<span class="cm"># =============================================</span></code></pre>
+  </section>
+
+  <!-- 03 FLOW -->
+  <section id="flow">
+    <h2><span class="num">03</span> Full Transition Flow</h2>
+
+    <h3>// USE_BLACK_BACKGROUND = false (default)</h3>
+    <div class="flow">
+      <div class="flow-box red">Trigger transition</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">Capture Town screenshot</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">Load Village underneath</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box orange">Shatter plays</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">Village visible through gaps</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box green">Shards fade + queue_free</div>
+    </div>
+
+    <h3>// USE_BLACK_BACKGROUND = true</h3>
+    <div class="flow">
+      <div class="flow-box red">Trigger transition</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">Capture Town screenshot</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">Load Village underneath</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box orange">Shatter plays over black</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">Black fades transparent</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box green">Village revealed + cleanup</div>
+    </div>
+
+    <div class="callout blue">
+      <strong>Village loads before shatter starts</strong>
+      Player never sees loading. Shatter animation covers it. By the time pieces fly away, Village is already fully loaded underneath.
+    </div>
+  </section>
+
+  <!-- 04 NODES -->
+  <section id="nodes">
+    <h2><span class="num">04</span> Node Structure</h2>
+
+    <div class="nodetree">
+      <div class="root">Main (Node3D)</div>
+      <div class="child">├── TownScene (Node3D) ← current scene</div>
+      <div class="child">├── VillageScene (Node3D) ← loaded underneath, live</div>
+      <div class="child">└── ShatterTransition (Node3D) ← spawned on trigger</div>
+      <div class="child2">├── ExplosionCenter (Node3D) ← blast origin point</div>
+      <div class="child2">├── BlackBackground (MeshInstance3D) ← optional</div>
+      <div class="child2">├── Shard_01 (RigidBody3D)</div>
+      <div class="child2 note">&nbsp;&nbsp;&nbsp;&nbsp;├── MeshInstance3D (flat quad)</div>
+      <div class="child2 note">&nbsp;&nbsp;&nbsp;&nbsp;└── CollisionShape3D (box)</div>
+      <div class="child2">├── Shard_02 (RigidBody3D)</div>
+      <div class="child2">├── Shard_03 (RigidBody3D)</div>
+      <div class="child2">└── ... (25-35 total)</div>
+    </div>
+
+    <div class="callout warning">
+      <strong>Shard Collision Layers</strong>
+      Set shards to NOT collide with each other — only fall through space. This skips thousands of physics calculations per frame. Shards only need to collide with nothing, just fly outward and fall.
+    </div>
+  </section>
+
+  <!-- 05 SCREEN CAPTURE -->
+  <section id="screen">
+    <h2><span class="num">05</span> Screen Capture <span class="badge system">SUBVIEWPORT</span></h2>
+    <p>Capture the current scene as a static image texture. Apply to all shards. This is the "frozen frame" that shatters apart.</p>
+
+    <pre data-lang="GDScript"><code><span class="cm"># Capture current viewport as ImageTexture</span>
+<span class="kw">func</span> <span class="fn">capture_screenshot</span>() -> ImageTexture:
+    <span class="kw">var</span> <span class="vr">image</span> = get_viewport().<span class="fn">get_texture</span>().<span class="fn">get_image</span>()
+    <span class="kw">var</span> <span class="vr">texture</span> = ImageTexture.<span class="fn">create_from_image</span>(<span class="vr">image</span>)
+    <span class="kw">return</span> <span class="vr">texture</span>
+
+<span class="cm"># Store it before loading next scene</span>
+<span class="kw">var</span> <span class="vr">screenshot</span> = <span class="fn">capture_screenshot</span>()
+<span class="cm"># then load Village, then apply screenshot to shards</span></code></pre>
+
+    <div class="callout info">
+      <strong>Order matters</strong>
+      Capture screenshot FIRST before loading Village. Otherwise you capture Village instead of Town.
+    </div>
+  </section>
+
+  <!-- 06 SHARDS -->
+  <section id="shards">
+    <h2><span class="num">06</span> Shard Setup</h2>
+    <p>Each shard is a RigidBody3D with a flat quad mesh. Start frozen so they don't fall before transition triggers. Arranged in a grid covering the screen area.</p>
+
+    <pre data-lang="GDScript"><code><span class="cm"># Generate shards procedurally at runtime</span>
+<span class="cm"># No need for pre-made scene — just create flat quads in code</span>
+
+<span class="kw">func</span> <span class="fn">create_shards</span>(<span class="vr">screenshot</span>: ImageTexture):
+    <span class="kw">var</span> <span class="vr">cols</span> = <span class="nm">6</span>   <span class="cm"># 6x5 = 30 shards</span>
+    <span class="kw">var</span> <span class="vr">rows</span> = <span class="nm">5</span>
+    <span class="kw">var</span> <span class="vr">shard_w</span> = screen_width / <span class="vr">cols</span>
+    <span class="kw">var</span> <span class="vr">shard_h</span> = screen_height / <span class="vr">rows</span>
+
+    <span class="kw">for</span> <span class="vr">row</span> <span class="kw">in</span> <span class="vr">rows</span>:
+        <span class="kw">for</span> <span class="vr">col</span> <span class="kw">in</span> <span class="vr">cols</span>:
+            <span class="kw">var</span> <span class="vr">shard</span> = RigidBody3D.<span class="fn">new</span>()
+            <span class="vr">shard</span>.freeze = <span class="bl">true</span>  <span class="cm"># frozen until blast</span>
+
+            <span class="cm"># position each shard in grid covering screen</span>
+            <span class="vr">shard</span>.position = Vector3(
+                (<span class="vr">col</span> * <span class="vr">shard_w</span>) - (screen_width / <span class="nm">2</span>),
+                (<span class="vr">row</span> * <span class="vr">shard_h</span>) - (screen_height / <span class="nm">2</span>),
+                <span class="nm">0</span>
+            )
+
+            <span class="cm"># flat quad mesh</span>
+            <span class="kw">var</span> <span class="vr">mesh</span> = QuadMesh.<span class="fn">new</span>()
+            <span class="vr">mesh</span>.size = Vector2(<span class="vr">shard_w</span>, <span class="vr">shard_h</span>)
+
+            <span class="kw">var</span> <span class="vr">mesh_instance</span> = MeshInstance3D.<span class="fn">new</span>()
+            <span class="vr">mesh_instance</span>.mesh = <span class="vr">mesh</span>
+            <span class="vr">mesh_instance</span>.material_override = <span class="fn">create_shard_material</span>(<span class="vr">screenshot</span>)
+
+            <span class="kw">var</span> <span class="vr">col_shape</span> = CollisionShape3D.<span class="fn">new</span>()
+            <span class="kw">var</span> <span class="vr">box</span> = BoxShape3D.<span class="fn">new</span>()
+            <span class="vr">box</span>.size = Vector3(<span class="vr">shard_w</span>, <span class="vr">shard_h</span>, <span class="nm">0.01</span>)
+            <span class="vr">col_shape</span>.shape = <span class="vr">box</span>
+
+            <span class="vr">shard</span>.<span class="fn">add_child</span>(<span class="vr">mesh_instance</span>)
+            <span class="vr">shard</span>.<span class="fn">add_child</span>(<span class="vr">col_shape</span>)
+            <span class="fn">add_child</span>(<span class="vr">shard</span>)</code></pre>
+  </section>
+
+  <!-- 07 MATERIAL -->
+  <section id="material">
+    <h2><span class="num">07</span> Unshaded Material <span class="badge key">KEY TRICK</span></h2>
+    <p>UNSHADED mode means next scene lighting (day/night/storm) does NOT affect shard appearance. Screenshot always looks exactly as captured.</p>
+
+    <pre data-lang="GDScript"><code><span class="kw">func</span> <span class="fn">create_shard_material</span>(<span class="vr">screenshot</span>: ImageTexture) -> StandardMaterial3D:
+    <span class="kw">var</span> <span class="vr">mat</span> = StandardMaterial3D.<span class="fn">new</span>()
+
+    <span class="cm"># KEY: unshaded — no lighting affects this material</span>
+    <span class="vr">mat</span>.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+
+    <span class="cm"># Apply screenshot as albedo texture</span>
+    <span class="vr">mat</span>.albedo_texture = <span class="vr">screenshot</span>
+
+    <span class="cm"># Triplanar mapping — seamless texture across all shards</span>
+    <span class="cm"># no UV unwrapping needed, projects from world space</span>
+    <span class="vr">mat</span>.uv1_triplanar = <span class="bl">true</span>
+    <span class="vr">mat</span>.uv1_world_triplanar = <span class="bl">true</span>
+
+    <span class="cm"># Enable transparency for fade out later</span>
+    <span class="vr">mat</span>.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+    <span class="vr">mat</span>.albedo_color = Color(<span class="nm">1</span>, <span class="nm">1</span>, <span class="nm">1</span>, <span class="nm">1</span>)  <span class="cm"># fully opaque at start</span>
+
+    <span class="kw">return</span> <span class="vr">mat</span></code></pre>
+
+    <div class="callout key">
+      <strong>Why Triplanar?</strong>
+      Each shard is a separate mesh with its own local UV space. Without triplanar, each shard would show the full screenshot instead of just its portion. Triplanar projects from world space — each shard automatically shows only the correct portion of the screenshot matching its screen position.
+    </div>
+  </section>
+
+  <!-- 08 EXPLOSION -->
+  <section id="explosion">
+    <h2><span class="num">08</span> Explosion Impulse Code</h2>
+    <p>Radiant explosion from center point. Closer pieces fly faster. Each piece also gets random 3D angular spin.</p>
+
+    <pre data-lang="GDScript"><code><span class="kw">func</span> <span class="fn">blast_shards</span>():
+    <span class="kw">var</span> <span class="vr">explosion_origin</span>: Vector3 = <span class="vr">$ExplosionCenter</span>.global_position
+
+    <span class="kw">for</span> <span class="vr">shard</span> <span class="kw">in</span> <span class="fn">get_children</span>():
+        <span class="kw">if not</span> <span class="vr">shard</span> <span class="kw">is</span> RigidBody3D: <span class="kw">continue</span>
+
+        <span class="cm"># unfreeze</span>
+        <span class="vr">shard</span>.freeze = <span class="bl">false</span>
+
+        <span class="cm"># radiant direction from blast origin to shard</span>
+        <span class="kw">var</span> <span class="vr">direction</span>: Vector3 = <span class="vr">shard</span>.global_position - <span class="vr">explosion_origin</span>
+        <span class="kw">var</span> <span class="vr">distance</span>: <span class="kw">float</span> = <span class="vr">direction</span>.<span class="fn">length</span>()
+
+        <span class="cm"># closer = faster (inverse distance)</span>
+        <span class="kw">var</span> <span class="vr">impulse</span>: Vector3 = <span class="vr">direction</span>.<span class="fn">normalized</span>() * (<span class="vr">BLAST_POWER</span> / <span class="fn">max</span>(<span class="vr">distance</span>, <span class="nm">0.1</span>))
+
+        <span class="cm"># add slight forward push (toward camera) for dramatic effect</span>
+        <span class="vr">impulse</span>.z += <span class="vr">BLAST_POWER</span> * <span class="nm">0.3</span>
+
+        <span class="vr">shard</span>.<span class="fn">apply_central_impulse</span>(<span class="vr">impulse</span>)
+
+        <span class="cm"># random 3D angular spin</span>
+        <span class="kw">var</span> <span class="vr">spin</span> = Vector3(
+            <span class="fn">randf_range</span>(-<span class="vr">SPIN_STRENGTH</span>, <span class="vr">SPIN_STRENGTH</span>),
+            <span class="fn">randf_range</span>(-<span class="vr">SPIN_STRENGTH</span>, <span class="vr">SPIN_STRENGTH</span>),
+            <span class="fn">randf_range</span>(-<span class="vr">SPIN_STRENGTH</span>, <span class="vr">SPIN_STRENGTH</span>)
+        )
+        <span class="vr">shard</span>.<span class="fn">apply_torque_impulse</span>(<span class="vr">spin</span>)</code></pre>
+  </section>
+
+  <!-- 09 BLACK BACKGROUND -->
+  <section id="black">
+    <h2><span class="num">09</span> Black Background Option <span class="badge toggle">OPTIONAL</span></h2>
+    <p>When enabled — solid black plane sits between shards and next scene. After shatter, black fades transparent revealing next scene. Good for dramatic day→night transitions.</p>
+
+    <pre data-lang="GDScript"><code><span class="kw">func</span> <span class="fn">setup_black_background</span>():
+    <span class="kw">if not</span> <span class="vr">USE_BLACK_BACKGROUND</span>: <span class="kw">return</span>
+
+    <span class="kw">var</span> <span class="vr">bg_mesh</span> = QuadMesh.<span class="fn">new</span>()
+    <span class="vr">bg_mesh</span>.size = Vector2(screen_width * <span class="nm">2</span>, screen_height * <span class="nm">2</span>)  <span class="cm"># oversized</span>
+
+    <span class="kw">var</span> <span class="vr">bg_mat</span> = StandardMaterial3D.<span class="fn">new</span>()
+    <span class="vr">bg_mat</span>.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+    <span class="vr">bg_mat</span>.albedo_color = Color(<span class="nm">0</span>, <span class="nm">0</span>, <span class="nm">0</span>, <span class="nm">1</span>)  <span class="cm"># solid black</span>
+    <span class="vr">bg_mat</span>.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+
+    <span class="vr">$BlackBackground</span>.mesh = <span class="vr">bg_mesh</span>
+    <span class="vr">$BlackBackground</span>.material_override = <span class="vr">bg_mat</span>
+    <span class="vr">$BlackBackground</span>.position.z = -<span class="nm">0.1</span>  <span class="cm"># slightly behind shards</span>
+
+<span class="cm"># fade black to transparent after shatter done</span>
+<span class="kw">func</span> <span class="fn">fade_black_background</span>():
+    <span class="kw">if not</span> <span class="vr">USE_BLACK_BACKGROUND</span>: <span class="kw">return</span>
+
+    <span class="kw">var</span> <span class="vr">tween</span> = <span class="fn">create_tween</span>()
+    <span class="vr">tween</span>.<span class="fn">tween_property</span>(
+        <span class="vr">$BlackBackground</span>.material_override,
+        <span class="str">"albedo_color:a"</span>,
+        <span class="nm">0.0</span>,  <span class="cm"># fade to fully transparent</span>
+        <span class="vr">BLACK_FADE_DURATION</span>
+    )
+    <span class="kw">await</span> <span class="vr">tween</span>.<span class="vr">finished</span>
+    <span class="cm"># village now fully visible</span></code></pre>
+  </section>
+
+  <!-- 10 CLEANUP -->
+  <section id="cleanup">
+    <h2><span class="num">10</span> Cleanup & Memory</h2>
+    <p>After shards finish flying, fade them out and queue_free the entire shatter container. Never leave physics bodies running after transition ends.</p>
+
+    <pre data-lang="GDScript"><code><span class="kw">func</span> <span class="fn">cleanup_shards</span>():
+    <span class="cm"># wait for shards to fly away</span>
+    <span class="kw">await</span> get_tree().<span class="fn">create_timer</span>(<span class="vr">SHARD_LIFETIME</span>).<span class="vr">timeout</span>
+
+    <span class="cm"># fade out all shards simultaneously</span>
+    <span class="kw">for</span> <span class="vr">shard</span> <span class="kw">in</span> <span class="fn">get_children</span>():
+        <span class="kw">if not</span> <span class="vr">shard</span> <span class="kw">is</span> RigidBody3D: <span class="kw">continue</span>
+        <span class="kw">var</span> <span class="vr">mat</span> = <span class="vr">shard</span>.<span class="fn">get_child</span>(<span class="nm">0</span>).material_override
+        <span class="kw">var</span> <span class="vr">tween</span> = <span class="fn">create_tween</span>()
+        <span class="vr">tween</span>.<span class="fn">tween_property</span>(<span class="vr">mat</span>, <span class="str">"albedo_color:a"</span>, <span class="nm">0.0</span>, <span class="vr">FADE_DURATION</span>)
+
+    <span class="cm"># wait for fade to finish</span>
+    <span class="kw">await</span> get_tree().<span class="fn">create_timer</span>(<span class="vr">FADE_DURATION</span>).<span class="vr">timeout</span>
+
+    <span class="cm"># purge everything — shards, collisions, meshes all freed</span>
+    <span class="fn">queue_free</span>()</code></pre>
+  </section>
+
+  <!-- 11 FULL MANAGER -->
+  <section id="manager">
+    <h2><span class="num">11</span> Full Transition Manager <span class="badge system">SYSTEM</span></h2>
+
+    <pre data-lang="GDScript"><code><span class="cm"># ShatterTransition.gd — attach to ShatterTransition node</span>
+<span class="kw">extends</span> Node3D
+
+<span class="cm"># =============================================</span>
+<span class="cm"># SETTINGS</span>
+<span class="cm"># =============================================</span>
+<span class="kw">var</span> <span class="vr">SHARD_COUNT</span>: <span class="kw">int</span> = <span class="nm">30</span>
+<span class="kw">var</span> <span class="vr">BLAST_POWER</span>: <span class="kw">float</span> = <span class="nm">15.0</span>
+<span class="kw">var</span> <span class="vr">SPIN_STRENGTH</span>: <span class="kw">float</span> = <span class="nm">8.0</span>
+<span class="kw">var</span> <span class="vr">SHARD_LIFETIME</span>: <span class="kw">float</span> = <span class="nm">1.5</span>
+<span class="kw">var</span> <span class="vr">FADE_DURATION</span>: <span class="kw">float</span> = <span class="nm">0.4</span>
+<span class="kw">var</span> <span class="vr">USE_BLACK_BACKGROUND</span>: <span class="kw">bool</span> = <span class="bl">false</span>
+<span class="kw">var</span> <span class="vr">BLACK_FADE_DURATION</span>: <span class="kw">float</span> = <span class="nm">0.5</span>
+
+<span class="cm"># =============================================</span>
+<span class="cm"># MAIN TRIGGER</span>
+<span class="cm"># =============================================</span>
+<span class="kw">func</span> <span class="fn">start_transition</span>(<span class="vr">next_scene_path</span>: String):
+    <span class="cm"># 1. capture screenshot FIRST before loading next scene</span>
+    <span class="kw">var</span> <span class="vr">screenshot</span> = <span class="fn">capture_screenshot</span>()
+
+    <span class="cm"># 2. load next scene underneath</span>
+    <span class="kw">var</span> <span class="vr">next_scene</span> = <span class="fn">load</span>(<span class="vr">next_scene_path</span>).<span class="fn">instantiate</span>()
+    get_parent().<span class="fn">add_child</span>(<span class="vr">next_scene</span>)
+    get_parent().<span class="fn">move_child</span>(<span class="vr">next_scene</span>, <span class="nm">0</span>)  <span class="cm"># put behind everything</span>
+
+    <span class="cm"># 3. setup black background if enabled</span>
+    <span class="fn">setup_black_background</span>()
+
+    <span class="cm"># 4. create shards on top</span>
+    <span class="fn">create_shards</span>(<span class="vr">screenshot</span>)
+
+    <span class="cm"># 5. blast shards apart</span>
+    <span class="fn">blast_shards</span>()
+
+    <span class="cm"># 6. fade black if enabled</span>
+    <span class="fn">fade_black_background</span>()
+
+    <span class="cm"># 7. cleanup after transition</span>
+    <span class="fn">cleanup_shards</span>()
+
+    <span class="cm"># 8. remove old Town scene</span>
+    get_parent().<span class="fn">get_node</span>(<span class="str">"TownScene"</span>).<span class="fn">queue_free</span>()</code></pre>
+
+    <h3>// How to trigger from Town scene</h3>
+    <pre data-lang="GDScript"><code><span class="cm"># In Town.gd — when player hits exit trigger</span>
+<span class="kw">func</span> <span class="fn">_on_exit_triggered</span>():
+    <span class="kw">var</span> <span class="vr">shatter</span> = <span class="fn">load</span>(<span class="str">"res://transitions/ShatterTransition.tscn"</span>).<span class="fn">instantiate</span>()
+    get_parent().<span class="fn">add_child</span>(<span class="vr">shatter</span>)
+    <span class="vr">shatter</span>.<span class="fn">start_transition</span>(<span class="str">"res://scenes/Village.tscn"</span>)</code></pre>
+  </section>
+
+  <!-- 12 SUMMARY -->
+  <section id="summary">
+    <h2><span class="num">12</span> Summary</h2>
+
+    <ul class="checklist">
+      <li>Capture screenshot <strong>before</strong> loading next scene</li>
+      <li>Next scene loads <strong>live underneath</strong> — not frozen</li>
+      <li>Shards use <strong>UNSHADED material</strong> — next scene lighting never affects them</li>
+      <li><strong>Triplanar UV</strong> — each shard shows correct portion of screenshot automatically</li>
+      <li>Shards start <strong>frozen</strong> — unfreeze all at blast moment</li>
+      <li>Explosion is <strong>radiant from center</strong> — closer pieces fly faster</li>
+      <li>Each shard gets <strong>random 3D angular spin</strong> for cinematic feel</li>
+      <li>Shard collisions <strong>disabled between each other</strong> — huge performance saving</li>
+      <li><strong>USE_BLACK_BACKGROUND</strong> optional — black fades transparent after shatter</li>
+      <li><strong>queue_free()</strong> all shards after fade — clean memory every time</li>
+      <li>Built as <strong>Town → Village mockup</strong> — reuse for battle transition later</li>
+    </ul>
+
+    <div class="callout tip">
+      <strong>Build Order</strong>
+      Get screenshot → apply to one shard → triplanar correct → then multiply to 30 shards → then add blast → then cleanup. Test each step before adding next.
+    </div>
+  </section>
+
+  <footer>
+    <span>// shatter-transition · godot 4 · 3d · gdscript</span>
+    <span>personal dev docs · keep for reference</span>
+  </footer>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teetering System — Game Dev Docs</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #0d1220;
+    --bg2: #111a2e;
+    --bg3: #172340;
+    --accent: #47aaff;
+    --accent2: #ff6b6b;
+    --accent3: #ffd447;
+    --accent4: #47ffd4;
+    --text: #c8d8f0;
+    --text-dim: #4a6a8a;
+    --border: #1e2d4a;
+    --code-bg: #080d18;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    line-height: 1.7;
+    min-height: 100vh;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(71,170,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(71,170,255,0.025) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+    position: relative;
+    z-index: 1;
+  }
+
+  header {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 32px;
+    margin-bottom: 48px;
+  }
+
+  .tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: block;
+  }
+
+  h1 {
+    font-size: clamp(28px, 5vw, 44px);
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.1;
+    margin-bottom: 16px;
+  }
+
+  h1 span { color: var(--accent); }
+
+  .subtitle {
+    color: var(--text-dim);
+    font-size: 14px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .toc {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    padding: 20px 24px;
+    margin-bottom: 48px;
+    border-radius: 2px;
+  }
+
+  .toc-title {
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--accent);
+    font-family: 'JetBrains Mono', monospace;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+  }
+
+  .toc a {
+    display: block;
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 13px;
+    padding: 3px 0;
+    font-family: 'JetBrains Mono', monospace;
+    transition: color 0.2s;
+  }
+
+  .toc a:hover { color: var(--accent); }
+  .toc a::before { content: '→ '; color: var(--accent); }
+
+  section { margin-bottom: 56px; }
+
+  h2 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  h2 .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+    background: rgba(71,170,255,0.08);
+    padding: 2px 8px;
+    border: 1px solid rgba(71,170,255,0.2);
+  }
+
+  h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--accent3);
+    margin: 24px 0 10px;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 1px;
+  }
+
+  p {
+    font-size: 14px;
+    color: var(--text);
+    margin-bottom: 14px;
+  }
+
+  .callout {
+    padding: 16px 20px;
+    margin: 20px 0;
+    border-radius: 2px;
+    font-size: 13px;
+    border-left: 3px solid;
+  }
+
+  .callout.info { background: rgba(71,170,255,0.05); border-color: var(--accent); }
+  .callout.warning { background: rgba(255,107,107,0.06); border-color: var(--accent2); }
+  .callout.tip { background: rgba(255,212,71,0.06); border-color: var(--accent3); }
+  .callout.blue { background: rgba(71,255,212,0.06); border-color: var(--accent4); }
+
+  .callout strong {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .callout.info strong { color: var(--accent); }
+  .callout.warning strong { color: var(--accent2); }
+  .callout.tip strong { color: var(--accent3); }
+  .callout.blue strong { color: var(--accent4); }
+
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 20px;
+    overflow-x: auto;
+    margin: 16px 0;
+    position: relative;
+  }
+
+  pre::before {
+    content: attr(data-lang);
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+  }
+
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.9;
+    color: var(--text);
+  }
+
+  .kw { color: #c792ea; }
+  .fn { color: #82aaff; }
+  .str { color: #c3e88d; }
+  .cm { color: #3d5c42; font-style: italic; }
+  .nm { color: #f78c6c; }
+  .vr { color: var(--accent); }
+  .sg { color: var(--accent3); }
+  .bl { color: var(--accent2); }
+
+  .table-wrap {
+    overflow-x: auto;
+    margin: 16px 0;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  th {
+    background: var(--bg3);
+    color: var(--accent);
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: top;
+  }
+
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+
+  td.yes { color: var(--accent); }
+  td.no { color: var(--accent2); }
+  td.opt { color: var(--accent3); }
+
+  /* Ray diagram */
+  .ray-diagram {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    padding: 24px;
+    margin: 16px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--text-dim);
+    text-align: center;
+    line-height: 2;
+  }
+
+  .ray-diagram .center { color: var(--accent3); font-size: 18px; }
+  .ray-diagram .ray { color: var(--accent); }
+  .ray-diagram .label { color: var(--text-dim); font-size: 11px; margin-top: 8px; }
+
+  .checklist {
+    list-style: none;
+    margin: 16px 0;
+  }
+
+  .checklist li {
+    font-size: 13px;
+    padding: 6px 0;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text);
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .checklist li::before { content: '✓'; color: var(--accent); flex-shrink: 0; }
+
+  .badge {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 2px;
+    letter-spacing: 1px;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+
+  .badge.system { background: rgba(71,170,255,0.1); color: var(--accent); border: 1px solid rgba(71,170,255,0.2); }
+  .badge.toggle { background: rgba(255,212,71,0.1); color: var(--accent3); border: 1px solid rgba(255,212,71,0.2); }
+  .badge.reuse { background: rgba(71,255,212,0.1); color: var(--accent4); border: 1px solid rgba(71,255,212,0.2); }
+
+  /* State flow */
+  .states {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: 16px 0;
+  }
+
+  .state-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    padding: 8px 14px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+  }
+
+  .state-name {
+    min-width: 120px;
+    color: var(--accent3);
+    font-weight: 600;
+  }
+
+  .state-arrow { color: var(--text-dim); }
+  .state-desc { color: var(--text); }
+  .state-trigger { color: var(--accent4); font-size: 11px; margin-left: auto; }
+
+  footer {
+    border-top: 1px solid var(--border);
+    padding-top: 24px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <span class="tag">Godot 4 · 3D · GDScript · Game Systems</span>
+    <h1><span>Teetering</span><br>System Documentation</h1>
+    <p class="subtitle">// personal reference · 3D edge detection · ledge fall · bubble indicator</p>
+  </header>
+
+  <nav class="toc">
+    <div class="toc-title">Contents</div>
+    <a href="#concept">01 — What is Teetering</a>
+    <a href="#settings">02 — Settings & Toggles</a>
+    <a href="#states">03 — States</a>
+    <a href="#rays">04 — Ray Detection (8 Rays)</a>
+    <a href="#slope">05 — Slope Threshold</a>
+    <a href="#bubble">06 — Bubble System</a>
+    <a href="#fall">07 — Fall Tracking</a>
+    <a href="#damage">08 — Fall Damage (External)</a>
+    <a href="#code">09 — Full Teetering Code</a>
+    <a href="#summary">10 — Summary</a>
+  </nav>
+
+  <!-- 01 CONCEPT -->
+  <section id="concept">
+    <h2><span class="num">01</span> What is Teetering</h2>
+    <p>Teetering is a ledge safety mechanic from Wild Arms — when a player walks toward an edge slowly, the character stops and shows a bubble indicator instead of falling. The player must confirm to fall down intentionally.</p>
+
+    <div class="callout info">
+      <strong>Design Goal</strong>
+      Player never falls accidentally while walking. Running off an edge is intentional. Teetering gives player a moment to decide — jump down or back away.
+    </div>
+
+    <h3>// When teetering activates</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>condition</th><th>teeter active?</th></tr></thead>
+        <tbody>
+          <tr><td>player grounded + walking + moving toward edge</td><td class="yes">YES ✓</td></tr>
+          <tr><td>player standing still near edge</td><td class="no">NO ✗</td></tr>
+          <tr><td>player running toward edge</td><td class="no">NO — falls off (switchable)</td></tr>
+          <tr><td>player airborne / falling</td><td class="no">NO ✗</td></tr>
+          <tr><td>TEETER_ENABLED = false</td><td class="no">NO ✗</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 02 SETTINGS -->
+  <section id="settings">
+    <h2><span class="num">02</span> Settings & Toggles <span class="badge toggle">SWITCHABLE</span></h2>
+    <p>All settings live at the top of the script. Change these without touching logic code. Adjust per scene as needed.</p>
+
+    <pre data-lang="GDScript"><code><span class="cm"># =============================================</span>
+<span class="cm"># TEETERING SYSTEM SETTINGS</span>
+<span class="cm"># =============================================</span>
+
+<span class="cm"># Master switch — disable teetering entirely for action sections</span>
+<span class="kw">var</span> <span class="vr">TEETER_ENABLED</span>: <span class="kw">bool</span> = <span class="bl">true</span>
+
+<span class="cm"># Show bubble indicator when teetering</span>
+<span class="kw">var</span> <span class="vr">BUBBLE_ENABLED</span>: <span class="kw">bool</span> = <span class="bl">true</span>
+
+<span class="cm"># Running toward edge = fall off immediately (no teeter)</span>
+<span class="cm"># set false = running also triggers teeter</span>
+<span class="kw">var</span> <span class="vr">RUN_FALLS_OFF</span>: <span class="kw">bool</span> = <span class="bl">true</span>
+
+<span class="cm"># Enable optional extra cancel buttons (beside move backward)</span>
+<span class="kw">var</span> <span class="vr">OPTIONAL_CANCEL_ENABLED</span>: <span class="kw">bool</span> = <span class="bl">true</span>
+
+<span class="cm"># Max height difference (pixels) to treat as slope vs edge</span>
+<span class="cm"># tune based on your art — bigger = less sensitive</span>
+<span class="kw">var</span> <span class="vr">MAX_SLOPE_HEIGHT</span>: <span class="kw">float</span> = <span class="nm">16.0</span>
+
+<span class="cm"># Enable fall damage — calls DamageSystem.calculate_fall_damage()</span>
+<span class="kw">var</span> <span class="vr">FALL_DAMAGE_ENABLED</span>: <span class="kw">bool</span> = <span class="bl">false</span>
+
+<span class="cm"># Restart player position on fall (for dungeons)</span>
+<span class="kw">var</span> <span class="vr">RESTART_ON_FALL</span>: <span class="kw">bool</span> = <span class="bl">false</span>
+
+<span class="cm"># =============================================</span></code></pre>
+  </section>
+
+  <!-- 03 STATES -->
+  <section id="states">
+    <h2><span class="num">03</span> States</h2>
+
+    <div class="states">
+      <div class="state-row">
+        <div class="state-name">WALKING</div>
+        <div class="state-arrow">→</div>
+        <div class="state-desc">normal movement, rays checking ahead</div>
+        <div class="state-trigger">default state</div>
+      </div>
+      <div class="state-row">
+        <div class="state-name">TEETERING</div>
+        <div class="state-arrow">→</div>
+        <div class="state-desc">at edge, bubble shows, movement stopped, waiting for input</div>
+        <div class="state-trigger">edge detected while walking</div>
+      </div>
+      <div class="state-row">
+        <div class="state-name">FALLING</div>
+        <div class="state-arrow">→</div>
+        <div class="state-desc">airborne, no teeter detection, Godot handles collision</div>
+        <div class="state-trigger">confirm pressed / running off edge</div>
+      </div>
+      <div class="state-row">
+        <div class="state-name">LANDING</div>
+        <div class="state-arrow">→</div>
+        <div class="state-desc">just landed, calculate fall distance, call damage if enabled</div>
+        <div class="state-trigger">grounded after falling</div>
+      </div>
+    </div>
+
+    <div class="callout warning">
+      <strong>Important</strong>
+      Teetering NEVER activates during FALLING state. Check is_grounded before any edge detection logic.
+    </div>
+  </section>
+
+  <!-- 04 RAYS -->
+  <section id="rays">
+    <h2><span class="num">04</span> Ray Detection — 8 Rays <span class="badge system">SYSTEM</span></h2>
+    <p>8 raycasts positioned around character feet, each pointing downward at a slight forward angle. Free movement (non-tile) requires 8 rays to cover all walk directions.</p>
+
+    <div class="ray-diagram">
+      <div>
+        <span class="ray">↖</span>&nbsp;&nbsp;
+        <span class="ray">↑</span>&nbsp;&nbsp;
+        <span class="ray">↗</span>
+      </div>
+      <div>
+        <span class="ray">←</span>&nbsp;&nbsp;
+        <span class="center">●</span>&nbsp;&nbsp;
+        <span class="ray">→</span>
+      </div>
+      <div>
+        <span class="ray">↙</span>&nbsp;&nbsp;
+        <span class="ray">↓</span>&nbsp;&nbsp;
+        <span class="ray">↘</span>
+      </div>
+      <div class="label">8 rays around character feet · each points downward at slight forward angle</div>
+    </div>
+
+    <h3>// Only check rays matching movement direction</h3>
+    <p>No need to check all 8 every frame. Filter rays using dot product against movement direction — only rays roughly facing the same direction as movement are checked.</p>
+
+    <pre data-lang="GDScript"><code><span class="cm"># setup 8 raycasts in _ready() — RayCast3D for 3D world</span>
+<span class="kw">var</span> <span class="vr">rays</span>: Array = []
+
+<span class="cm"># 8 directions as Vector3 (X/Z plane, Y is up in 3D)</span>
+<span class="kw">var</span> <span class="vr">RAY_DIRS</span> = [
+    Vector3(<span class="nm">1</span>,<span class="nm">0</span>,<span class="nm">0</span>), Vector3(<span class="nm">1</span>,<span class="nm">0</span>,<span class="nm">1</span>).normalized(),
+    Vector3(<span class="nm">0</span>,<span class="nm">0</span>,<span class="nm">1</span>), Vector3(-<span class="nm">1</span>,<span class="nm">0</span>,<span class="nm">1</span>).normalized(),
+    Vector3(-<span class="nm">1</span>,<span class="nm">0</span>,<span class="nm">0</span>), Vector3(-<span class="nm">1</span>,<span class="nm">0</span>,-<span class="nm">1</span>).normalized(),
+    Vector3(<span class="nm">0</span>,<span class="nm">0</span>,-<span class="nm">1</span>), Vector3(<span class="nm">1</span>,<span class="nm">0</span>,-<span class="nm">1</span>).normalized()
+]
+
+<span class="kw">func</span> <span class="fn">_ready</span>():
+    <span class="kw">for</span> <span class="vr">dir</span> <span class="kw">in</span> <span class="vr">RAY_DIRS</span>:
+        <span class="kw">var</span> <span class="vr">ray</span> = RayCast3D.<span class="fn">new</span>()
+        <span class="cm"># forward + downward in 3D (Y is down offset)</span>
+        <span class="vr">ray</span>.target_position = (<span class="vr">dir</span> * <span class="nm">0.3</span>) + Vector3(<span class="nm">0</span>, -<span class="nm">0.8</span>, <span class="nm">0</span>)
+        <span class="vr">ray</span>.enabled = <span class="bl">true</span>
+        <span class="fn">add_child</span>(<span class="vr">ray</span>)
+        <span class="vr">rays</span>.<span class="fn">append</span>(<span class="vr">ray</span>)
+
+<span class="cm"># check only rays matching movement direction</span>
+<span class="kw">func</span> <span class="fn">is_edge_ahead</span>(<span class="vr">move_dir</span>: Vector3) -> <span class="kw">bool</span>:
+    <span class="kw">for</span> <span class="vr">ray</span> <span class="kw">in</span> <span class="vr">rays</span>:
+        <span class="kw">var</span> <span class="vr">ray_dir</span> = <span class="vr">ray</span>.target_position.<span class="fn">normalized</span>()
+        <span class="cm"># dot product > 0.5 means ray faces same direction as movement</span>
+        <span class="kw">if</span> <span class="vr">ray_dir</span>.<span class="fn">dot</span>(<span class="vr">move_dir</span>) > <span class="nm">0.5</span>:
+            <span class="kw">if</span> <span class="fn">check_ray_is_edge</span>(<span class="vr">ray</span>):
+                <span class="kw">return true</span>
+    <span class="kw">return false</span></code></pre>
+  </section>
+
+  <!-- 05 SLOPE -->
+  <section id="slope">
+    <h2><span class="num">05</span> Slope Threshold</h2>
+    <p>If a ray hits ground but at a very different height, it's a cliff edge — not just a slope. Threshold is controlled by <code>MAX_SLOPE_HEIGHT</code> in settings.</p>
+
+    <pre data-lang="GDScript"><code><span class="kw">func</span> <span class="fn">check_ray_is_edge</span>(<span class="vr">ray</span>: RayCast3D) -> <span class="kw">bool</span>:
+    <span class="cm"># ray hits nothing = definite edge</span>
+    <span class="kw">if not</span> <span class="vr">ray</span>.<span class="fn">is_colliding</span>():
+        <span class="kw">return true</span>
+
+    <span class="cm"># ray hits ground — check height difference (Y axis in 3D)</span>
+    <span class="kw">var</span> <span class="vr">hit_y</span> = <span class="vr">ray</span>.<span class="fn">get_collision_point</span>().y
+    <span class="kw">var</span> <span class="vr">char_y</span> = global_position.y
+    <span class="kw">var</span> <span class="vr">height_diff</span> = <span class="vr">char_y</span> - <span class="vr">hit_y</span>  <span class="cm"># positive = drop below character</span>
+
+    <span class="cm"># bigger than threshold = cliff edge, not slope</span>
+    <span class="kw">return</span> <span class="vr">height_diff</span> > <span class="vr">MAX_SLOPE_HEIGHT</span></code></pre>
+
+    <div class="callout tip">
+      <strong>Tuning MAX_SLOPE_HEIGHT</strong>
+      Start at 16px and test. Too small = teeters on gentle slopes. Too large = misses real edges. Ask your artist the maximum slope height in the game and set threshold just above that.
+    </div>
+  </section>
+
+  <!-- 06 BUBBLE -->
+  <section id="bubble">
+    <h2><span class="num">06</span> Bubble System <span class="badge reuse">REUSABLE IN CUTSCENE</span></h2>
+    <p>Simple sprite above character head. Always faces camera using <code>global_rotation = 0</code>. Works for any character — no per-character art needed. Reusable for cutscene expressions later.</p>
+
+    <pre data-lang="GDScript"><code><span class="cm"># Bubble node setup in 3D scene:</span>
+<span class="cm"># Character (CharacterBody3D)</span>
+<span class="cm">#   └── BubbleAnchor (Node3D — positioned above head)</span>
+<span class="cm">#         └── BubbleSprite (Sprite3D — set Billboard = Enabled in Inspector)</span>
+<span class="cm">#               Billboard mode = always faces camera automatically ✅</span>
+
+<span class="cm"># Bubble sprites — load your own images</span>
+<span class="kw">var</span> <span class="vr">bubble_textures</span> = {
+    <span class="str">"exclamation"</span>: <span class="fn">preload</span>(<span class="str">"res://bubbles/exclamation.png"</span>),
+    <span class="str">"question"</span>:    <span class="fn">preload</span>(<span class="str">"res://bubbles/question.png"</span>),
+    <span class="str">"arrow_down"</span>:  <span class="fn">preload</span>(<span class="str">"res://bubbles/arrow_down.png"</span>),
+}
+
+<span class="kw">func</span> <span class="fn">show_bubble</span>(<span class="vr">type</span>: String):
+    <span class="kw">if not</span> <span class="vr">BUBBLE_ENABLED</span>: <span class="kw">return</span>
+    <span class="vr">$BubbleAnchor/BubbleSprite</span>.texture = <span class="vr">bubble_textures</span>[<span class="vr">type</span>]
+    <span class="vr">$BubbleAnchor</span>.visible = <span class="bl">true</span>
+
+<span class="kw">func</span> <span class="fn">hide_bubble</span>():
+    <span class="vr">$BubbleAnchor</span>.visible = <span class="bl">false</span>
+
+<span class="cm"># No manual rotation needed in 3D!</span>
+<span class="cm"># Sprite3D Billboard property handles camera facing automatically</span>
+<span class="cm"># Set in Inspector: Sprite3D → Billboard → Enabled</span></code></pre>
+
+    <div class="callout blue">
+      <strong>Reuse in Cutscene</strong>
+      This same show_bubble() / hide_bubble() can be called from your cutscene expression command. One system, two uses.
+    </div>
+  </section>
+
+  <!-- 07 FALL TRACKING -->
+  <section id="fall">
+    <h2><span class="num">07</span> Fall Tracking</h2>
+    <p>Store position before fall and calculate fall distance on landing. Always print for game design reference — decide damage values later without changing code.</p>
+
+    <pre data-lang="GDScript"><code><span class="cm"># tracking vars — all Vector3 in 3D</span>
+<span class="kw">var</span> <span class="vr">position_before_fall</span>: Vector3 = Vector3.<span class="vr">ZERO</span>
+<span class="kw">var</span> <span class="vr">fall_start_y</span>: <span class="kw">float</span> = <span class="nm">0.0</span>
+<span class="kw">var</span> <span class="vr">last_fall_distance</span>: <span class="kw">float</span> = <span class="nm">0.0</span>
+
+<span class="cm"># called when player confirms fall or runs off edge</span>
+<span class="kw">func</span> <span class="fn">start_fall</span>():
+    <span class="vr">position_before_fall</span> = global_position  <span class="cm"># Vector3 — store for restart</span>
+    <span class="vr">fall_start_y</span> = global_position.y        <span class="cm"># Y is vertical axis in 3D</span>
+    state = <span class="str">"falling"</span>
+    <span class="fn">hide_bubble</span>()
+
+<span class="cm"># called when player lands (is_on_floor() becomes true)</span>
+<span class="kw">func</span> <span class="fn">on_land</span>():
+    <span class="vr">last_fall_distance</span> = <span class="vr">fall_start_y</span> - global_position.y  <span class="cm"># Y drops on fall in 3D</span>
+
+    <span class="cm"># always print for game design reference</span>
+    <span class="fn">print</span>(<span class="str">"[FALL] distance: "</span>, <span class="vr">last_fall_distance</span>, <span class="str">" units | from: "</span>, <span class="vr">position_before_fall</span>)
+
+    <span class="kw">if</span> <span class="vr">FALL_DAMAGE_ENABLED</span>:
+        DamageSystem.<span class="fn">calculate_fall_damage</span>(<span class="vr">last_fall_distance</span>)
+
+    <span class="kw">if</span> <span class="vr">RESTART_ON_FALL</span>:
+        global_position = <span class="vr">position_before_fall</span>
+
+    state = <span class="str">"walking"</span></code></pre>
+  </section>
+
+  <!-- 08 DAMAGE -->
+  <section id="damage">
+    <h2><span class="num">08</span> Fall Damage — External System</h2>
+    <p>Teetering system does NOT calculate damage. It only passes fall distance to an external function. Implement damage logic separately when game design is final.</p>
+
+    <pre data-lang="GDScript"><code><span class="cm"># DamageSystem.gd — implement later when game design is final</span>
+<span class="kw">extends</span> Node
+
+<span class="kw">func</span> <span class="fn">calculate_fall_damage</span>(<span class="vr">fall_distance</span>: <span class="kw">float</span>):
+    <span class="cm"># use last_fall_distance printed values to decide thresholds</span>
+    <span class="cm"># example structure — fill values when ready:</span>
+    
+    <span class="kw">if</span> <span class="vr">fall_distance</span> < <span class="nm">50</span>:
+        <span class="kw">pass</span>  <span class="cm"># no damage</span>
+    <span class="kw">elif</span> <span class="vr">fall_distance</span> < <span class="nm">150</span>:
+        <span class="kw">pass</span>  <span class="cm"># light damage</span>
+    <span class="kw">elif</span> <span class="vr">fall_distance</span> < <span class="nm">300</span>:
+        <span class="kw">pass</span>  <span class="cm"># heavy damage</span>
+    <span class="kw">else</span>:
+        <span class="kw">pass</span>  <span class="cm"># instant death</span></code></pre>
+
+    <div class="callout tip">
+      <strong>Workflow</strong>
+      Play the game with FALL_DAMAGE_ENABLED = false. Watch the print output for fall distances. Use those real numbers to fill in the damage thresholds above. No guessing needed.
+    </div>
+  </section>
+
+  <!-- 09 FULL CODE -->
+  <section id="code">
+    <h2><span class="num">09</span> Full Teetering Code <span class="badge system">SYSTEM</span></h2>
+
+    <pre data-lang="GDScript"><code><span class="cm"># Teetering.gd — attach to player character (3D)</span>
+<span class="kw">extends</span> CharacterBody3D
+
+<span class="cm"># =============================================</span>
+<span class="cm"># SETTINGS</span>
+<span class="cm"># =============================================</span>
+<span class="kw">var</span> <span class="vr">TEETER_ENABLED</span>: <span class="kw">bool</span> = <span class="bl">true</span>
+<span class="kw">var</span> <span class="vr">BUBBLE_ENABLED</span>: <span class="kw">bool</span> = <span class="bl">true</span>
+<span class="kw">var</span> <span class="vr">RUN_FALLS_OFF</span>: <span class="kw">bool</span> = <span class="bl">true</span>
+<span class="kw">var</span> <span class="vr">OPTIONAL_CANCEL_ENABLED</span>: <span class="kw">bool</span> = <span class="bl">true</span>
+<span class="kw">var</span> <span class="vr">MAX_SLOPE_HEIGHT</span>: <span class="kw">float</span> = <span class="nm">0.5</span>  <span class="cm"># 3D units, tune to your art</span>
+<span class="kw">var</span> <span class="vr">FALL_DAMAGE_ENABLED</span>: <span class="kw">bool</span> = <span class="bl">false</span>
+<span class="kw">var</span> <span class="vr">RESTART_ON_FALL</span>: <span class="kw">bool</span> = <span class="bl">false</span>
+
+<span class="cm"># =============================================</span>
+<span class="cm"># INTERNAL VARS</span>
+<span class="cm"># =============================================</span>
+<span class="kw">var</span> <span class="vr">state</span>: String = <span class="str">"walking"</span>
+<span class="kw">var</span> <span class="vr">rays</span>: Array = []
+<span class="kw">var</span> <span class="vr">position_before_fall</span>: Vector3 = Vector3.<span class="vr">ZERO</span>
+<span class="kw">var</span> <span class="vr">fall_start_y</span>: <span class="kw">float</span> = <span class="nm">0.0</span>
+<span class="kw">var</span> <span class="vr">last_fall_distance</span>: <span class="kw">float</span> = <span class="nm">0.0</span>
+<span class="kw">var</span> <span class="vr">WALK_SPEED</span>: <span class="kw">float</span> = <span class="nm">4.0</span>
+<span class="kw">var</span> <span class="vr">RUN_SPEED</span>: <span class="kw">float</span> = <span class="nm">8.0</span>
+
+<span class="cm"># 8 directions on X/Z plane</span>
+<span class="kw">var</span> <span class="vr">RAY_DIRS</span> = [
+    Vector3(<span class="nm">1</span>,<span class="nm">0</span>,<span class="nm">0</span>), Vector3(<span class="nm">1</span>,<span class="nm">0</span>,<span class="nm">1</span>).normalized(),
+    Vector3(<span class="nm">0</span>,<span class="nm">0</span>,<span class="nm">1</span>), Vector3(-<span class="nm">1</span>,<span class="nm">0</span>,<span class="nm">1</span>).normalized(),
+    Vector3(-<span class="nm">1</span>,<span class="nm">0</span>,<span class="nm">0</span>), Vector3(-<span class="nm">1</span>,<span class="nm">0</span>,-<span class="nm">1</span>).normalized(),
+    Vector3(<span class="nm">0</span>,<span class="nm">0</span>,-<span class="nm">1</span>), Vector3(<span class="nm">1</span>,<span class="nm">0</span>,-<span class="nm">1</span>).normalized()
+]
+
+<span class="kw">func</span> <span class="fn">_ready</span>():
+    <span class="cm"># build 8 RayCast3D nodes</span>
+    <span class="kw">for</span> <span class="vr">dir</span> <span class="kw">in</span> <span class="vr">RAY_DIRS</span>:
+        <span class="kw">var</span> <span class="vr">ray</span> = RayCast3D.<span class="fn">new</span>()
+        <span class="vr">ray</span>.target_position = (<span class="vr">dir</span> * <span class="nm">0.3</span>) + Vector3(<span class="nm">0</span>, -<span class="nm">0.8</span>, <span class="nm">0</span>)
+        <span class="vr">ray</span>.enabled = <span class="bl">true</span>
+        <span class="fn">add_child</span>(<span class="vr">ray</span>)
+        <span class="vr">rays</span>.<span class="fn">append</span>(<span class="vr">ray</span>)
+
+<span class="kw">func</span> <span class="fn">_physics_process</span>(<span class="vr">delta</span>):
+    <span class="kw">match</span> <span class="vr">state</span>:
+        <span class="str">"walking"</span>:   <span class="fn">process_walking</span>(<span class="vr">delta</span>)
+        <span class="str">"teetering"</span>: <span class="fn">process_teetering</span>()
+        <span class="str">"falling"</span>:   <span class="fn">process_falling</span>()
+        <span class="str">"landing"</span>:   <span class="fn">on_land</span>()
+
+<span class="kw">func</span> <span class="fn">process_walking</span>(<span class="vr">delta</span>):
+    <span class="kw">if not</span> <span class="vr">TEETER_ENABLED</span>: <span class="kw">return</span>
+    <span class="kw">if not</span> <span class="fn">is_on_floor</span>(): <span class="kw">return</span>
+
+    <span class="cm"># input is Vector2, convert to Vector3 X/Z movement</span>
+    <span class="kw">var</span> <span class="vr">input2d</span> = Input.<span class="fn">get_vector</span>(<span class="str">"left"</span>, <span class="str">"right"</span>, <span class="str">"up"</span>, <span class="str">"down"</span>)
+    <span class="kw">if</span> <span class="vr">input2d</span> == Vector2.<span class="vr">ZERO</span>: <span class="kw">return</span>
+
+    <span class="kw">var</span> <span class="vr">move_dir3d</span> = Vector3(<span class="vr">input2d</span>.x, <span class="nm">0</span>, <span class="vr">input2d</span>.y).normalized()
+    <span class="kw">var</span> <span class="vr">is_running</span> = Input.<span class="fn">is_action_pressed</span>(<span class="str">"run"</span>)
+
+    <span class="kw">if</span> <span class="fn">is_edge_ahead</span>(<span class="vr">move_dir3d</span>):
+        <span class="kw">if</span> <span class="vr">is_running</span> <span class="kw">and</span> <span class="vr">RUN_FALLS_OFF</span>:
+            <span class="fn">start_fall</span>()
+        <span class="kw">else</span>:
+            <span class="fn">trigger_teeter</span>()
+
+<span class="kw">func</span> <span class="fn">process_teetering</span>():
+    <span class="kw">if</span> Input.<span class="fn">is_action_just_pressed</span>(<span class="str">"confirm"</span>):
+        <span class="fn">start_fall</span>()
+        <span class="kw">return</span>
+    <span class="kw">var</span> <span class="vr">input2d</span> = Input.<span class="fn">get_vector</span>(<span class="str">"left"</span>, <span class="str">"right"</span>, <span class="str">"up"</span>, <span class="str">"down"</span>)
+    <span class="kw">if</span> <span class="vr">input2d</span> != Vector2.<span class="vr">ZERO</span>:
+        <span class="fn">cancel_teeter</span>()
+        <span class="kw">return</span>
+    <span class="kw">if</span> <span class="vr">OPTIONAL_CANCEL_ENABLED</span>:
+        <span class="kw">if</span> Input.<span class="fn">is_action_just_pressed</span>(<span class="str">"cancel"</span>):
+            <span class="fn">cancel_teeter</span>()
+
+<span class="kw">func</span> <span class="fn">process_falling</span>():
+    <span class="kw">if</span> <span class="fn">is_on_floor</span>():
+        state = <span class="str">"landing"</span>
+
+<span class="kw">func</span> <span class="fn">trigger_teeter</span>():
+    state = <span class="str">"teetering"</span>
+    velocity = Vector3.<span class="vr">ZERO</span>  <span class="cm"># stop movement — Vector3 in 3D</span>
+    <span class="fn">show_bubble</span>(<span class="str">"exclamation"</span>)
+
+<span class="kw">func</span> <span class="fn">cancel_teeter</span>():
+    state = <span class="str">"walking"</span>
+    <span class="fn">hide_bubble</span>()
+
+<span class="kw">func</span> <span class="fn">start_fall</span>():
+    <span class="vr">position_before_fall</span> = global_position  <span class="cm"># Vector3</span>
+    <span class="vr">fall_start_y</span> = global_position.y
+    state = <span class="str">"falling"</span>
+    <span class="fn">hide_bubble</span>()
+
+<span class="kw">func</span> <span class="fn">on_land</span>():
+    <span class="vr">last_fall_distance</span> = <span class="vr">fall_start_y</span> - global_position.y  <span class="cm"># Y drops on fall</span>
+    <span class="fn">print</span>(<span class="str">"[FALL] distance: "</span>, <span class="vr">last_fall_distance</span>, <span class="str">" units | from: "</span>, <span class="vr">position_before_fall</span>)
+    <span class="kw">if</span> <span class="vr">FALL_DAMAGE_ENABLED</span>:
+        DamageSystem.<span class="fn">calculate_fall_damage</span>(<span class="vr">last_fall_distance</span>)
+    <span class="kw">if</span> <span class="vr">RESTART_ON_FALL</span>:
+        global_position = <span class="vr">position_before_fall</span>
+    state = <span class="str">"walking"</span>
+
+<span class="cm"># Ray helpers</span>
+<span class="kw">func</span> <span class="fn">is_edge_ahead</span>(<span class="vr">move_dir</span>: Vector2) -> <span class="kw">bool</span>:
+    <span class="kw">for</span> <span class="vr">ray</span> <span class="kw">in</span> <span class="vr">rays</span>:
+        <span class="kw">var</span> <span class="vr">ray_dir</span> = <span class="vr">ray</span>.target_position.<span class="fn">normalized</span>()
+        <span class="kw">if</span> <span class="vr">ray_dir</span>.<span class="fn">dot</span>(<span class="vr">move_dir</span>) > <span class="nm">0.5</span>:
+            <span class="kw">if</span> <span class="fn">check_ray_is_edge</span>(<span class="vr">ray</span>):
+                <span class="kw">return true</span>
+    <span class="kw">return false</span>
+
+<span class="kw">func</span> <span class="fn">check_ray_is_edge</span>(<span class="vr">ray</span>: RayCast2D) -> <span class="kw">bool</span>:
+    <span class="kw">if not</span> <span class="vr">ray</span>.<span class="fn">is_colliding</span>(): <span class="kw">return true</span>
+    <span class="kw">var</span> <span class="vr">height_diff</span> = <span class="vr">ray</span>.<span class="fn">get_collision_point</span>().y - global_position.y
+    <span class="kw">return</span> <span class="vr">height_diff</span> > <span class="vr">MAX_SLOPE_HEIGHT</span>
+
+<span class="cm"># Bubble helpers</span>
+<span class="kw">func</span> <span class="fn">show_bubble</span>(<span class="vr">type</span>: String):
+    <span class="kw">if not</span> <span class="vr">BUBBLE_ENABLED</span>: <span class="kw">return</span>
+    <span class="vr">$BubbleAnchor/BubbleSprite</span>.texture = <span class="fn">load</span>(<span class="str">"res://bubbles/"</span> + <span class="vr">type</span> + <span class="str">".png"</span>)
+    <span class="vr">$BubbleAnchor</span>.visible = <span class="bl">true</span>
+
+<span class="kw">func</span> <span class="fn">hide_bubble</span>():
+    <span class="vr">$BubbleAnchor</span>.visible = <span class="bl">false</span></code></pre>
+  </section>
+
+  <!-- 10 SUMMARY -->
+  <section id="summary">
+    <h2><span class="num">10</span> Summary</h2>
+
+    <ul class="checklist">
+      <li>Teetering only triggers when <strong>grounded + walking + moving toward edge</strong></li>
+      <li>Standing still near edge = <strong>nothing happens</strong></li>
+      <li>Running off edge = <strong>fall immediately</strong> (switchable via RUN_FALLS_OFF)</li>
+      <li>Airborne = <strong>no teeter detection ever</strong></li>
+      <li><strong>8 rays</strong> around feet — only check rays matching movement direction</li>
+      <li>Slope vs edge decided by <strong>MAX_SLOPE_HEIGHT</strong> threshold</li>
+      <li>Teeter stays <strong>forever</strong> until confirm (fall) or backward (cancel)</li>
+      <li>Bubble sprite above head — <strong>global_rotation = 0</strong> keeps it camera-facing</li>
+      <li>Bubble system is <strong>reusable</strong> for cutscene expressions</li>
+      <li>Fall distance and position <strong>always printed</strong> — use to design damage values later</li>
+      <li>Damage calculated in <strong>external DamageSystem</strong> — not inside teetering code</li>
+      <li>All settings as <strong>booleans/vars at top</strong> — change per scene without touching logic</li>
+    </ul>
+
+    <div class="callout tip">
+      <strong>Build Order Suggestion</strong>
+      Get 8 rays working first. Test edge detection without teeter state. Then add teeter state + bubble. Fall tracking and damage last.
+    </div>
+  </section>
+
+  <footer>
+    <span>// teetering-system · godot 4 · 3d · gdscript</span>
+    <span>personal dev docs · keep for reference</span>
+  </footer>
+
+</div>
+</body>
+</html>

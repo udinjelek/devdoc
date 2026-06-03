@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quest Flag System — Game Dev Docs</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #0d1a12;
+    --bg2: #111f16;
+    --bg3: #172a1c;
+    --accent: #47ff8a;
+    --accent2: #ffd447;
+    --accent3: #ff6b6b;
+    --accent4: #47ffd4;
+    --text: #c8e8d0;
+    --text-dim: #4a7a55;
+    --border: #1f3d28;
+    --code-bg: #080f0a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    line-height: 1.7;
+    min-height: 100vh;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(71,255,138,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(71,255,138,0.025) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+    position: relative;
+    z-index: 1;
+  }
+
+  header {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 32px;
+    margin-bottom: 48px;
+  }
+
+  .tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: block;
+  }
+
+  h1 {
+    font-size: clamp(28px, 5vw, 44px);
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.1;
+    margin-bottom: 16px;
+  }
+
+  h1 span { color: var(--accent); }
+
+  .subtitle {
+    color: var(--text-dim);
+    font-size: 14px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .toc {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    padding: 20px 24px;
+    margin-bottom: 48px;
+    border-radius: 2px;
+  }
+
+  .toc-title {
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--accent);
+    font-family: 'JetBrains Mono', monospace;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+  }
+
+  .toc a {
+    display: block;
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 13px;
+    padding: 3px 0;
+    font-family: 'JetBrains Mono', monospace;
+    transition: color 0.2s;
+  }
+
+  .toc a:hover { color: var(--accent); }
+  .toc a::before { content: '→ '; color: var(--accent); }
+
+  section { margin-bottom: 56px; }
+
+  h2 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  h2 .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+    background: rgba(71,255,138,0.08);
+    padding: 2px 8px;
+    border: 1px solid rgba(71,255,138,0.2);
+  }
+
+  h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--accent2);
+    margin: 24px 0 10px;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 1px;
+  }
+
+  p {
+    font-size: 14px;
+    color: var(--text);
+    margin-bottom: 14px;
+  }
+
+  .callout {
+    padding: 16px 20px;
+    margin: 20px 0;
+    border-radius: 2px;
+    font-size: 13px;
+    border-left: 3px solid;
+  }
+
+  .callout.info { background: rgba(71,255,138,0.05); border-color: var(--accent); }
+  .callout.tip { background: rgba(255,212,71,0.06); border-color: var(--accent2); }
+  .callout.warning { background: rgba(255,107,107,0.06); border-color: var(--accent3); }
+  .callout.blue { background: rgba(71,255,212,0.06); border-color: var(--accent4); }
+
+  .callout strong {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .callout.info strong { color: var(--accent); }
+  .callout.tip strong { color: var(--accent2); }
+  .callout.warning strong { color: var(--accent3); }
+  .callout.blue strong { color: var(--accent4); }
+
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 20px;
+    overflow-x: auto;
+    margin: 16px 0;
+    position: relative;
+  }
+
+  pre::before {
+    content: attr(data-lang);
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+  }
+
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.9;
+    color: var(--text);
+  }
+
+  .kw { color: #c792ea; }
+  .fn { color: #82aaff; }
+  .str { color: #c3e88d; }
+  .cm { color: #2a4a30; font-style: italic; }
+  .nm { color: #f78c6c; }
+  .vr { color: var(--accent); }
+  .bl { color: #ff9f43; }
+
+  .table-wrap {
+    overflow-x: auto;
+    margin: 16px 0;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  th {
+    background: var(--bg3);
+    color: var(--accent);
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: top;
+  }
+
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+
+  td.store { color: var(--accent); font-weight: 600; }
+  td.yes { color: var(--accent); }
+  td.no { color: var(--accent3); }
+  td.opt { color: var(--accent2); }
+
+  .checklist {
+    list-style: none;
+    margin: 16px 0;
+  }
+
+  .checklist li {
+    font-size: 13px;
+    padding: 6px 0;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text);
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .checklist li::before { content: '✓'; color: var(--accent); flex-shrink: 0; }
+
+  .badge {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 2px;
+    letter-spacing: 1px;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+
+  .badge.system { background: rgba(71,255,138,0.1); color: var(--accent); border: 1px solid rgba(71,255,138,0.2); }
+  .badge.autoload { background: rgba(255,212,71,0.1); color: var(--accent2); border: 1px solid rgba(255,212,71,0.2); }
+  .badge.npc { background: rgba(71,255,212,0.1); color: var(--accent4); border: 1px solid rgba(71,255,212,0.2); }
+
+  /* Layer diagram */
+  .layers {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 16px 0;
+  }
+
+  .layer {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 12px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+  }
+
+  .layer-num {
+    color: var(--accent);
+    font-size: 10px;
+    letter-spacing: 2px;
+    min-width: 70px;
+  }
+
+  .layer-name {
+    color: #fff;
+    font-weight: 600;
+    min-width: 120px;
+  }
+
+  .layer-desc { color: var(--text-dim); }
+
+  footer {
+    border-top: 1px solid var(--border);
+    padding-top: 24px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <span class="tag">Godot 4 · 3D · GDScript · Game Systems</span>
+    <h1>Quest <span>Flag</span><br>System Documentation</h1>
+    <p class="subtitle">// personal reference · narrative state · NPC behavior · save & load</p>
+  </header>
+
+  <nav class="toc">
+    <div class="toc-title">Contents</div>
+    <a href="#concept">01 — Concept & Three Layers</a>
+    <a href="#stores">02 — Four Data Stores</a>
+    <a href="#checkflags">03 — check_flags() — The Heart</a>
+    <a href="#setters">04 — Setters</a>
+    <a href="#npc">05 — NPC Behavior</a>
+    <a href="#markers">06 — Position Markers</a>
+    <a href="#triggers">07 — What Triggers Flags</a>
+    <a href="#save">08 — Save System</a>
+    <a href="#load">09 — Load System</a>
+    <a href="#slots">10 — Save Slot Management</a>
+    <a href="#gamestate">11 — Full GameState Code</a>
+    <a href="#summary">12 — Summary</a>
+  </nav>
+
+  <!-- 01 CONCEPT -->
+  <section id="concept">
+    <h2><span class="num">01</span> Concept & Three Layers</h2>
+    <p>Complex JRPG quests cannot use scattered if/else — too many combinations. Instead separate state into three layers, all living in one GameState autoload.</p>
+
+    <div class="layers">
+      <div class="layer">
+        <div class="layer-num">LAYER 1</div>
+        <div class="layer-name">Flag Store</div>
+        <div class="layer-desc">What happened — permanent, never reset</div>
+      </div>
+      <div class="layer">
+        <div class="layer-num">LAYER 2</div>
+        <div class="layer-name">Quest State</div>
+        <div class="layer-desc">Where in quest — can change multiple times</div>
+      </div>
+      <div class="layer">
+        <div class="layer-num">LAYER 3</div>
+        <div class="layer-name">NPC Reaction</div>
+        <div class="layer-desc">Generated at runtime from Layer 1 & 2 — not premade</div>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <strong>Layer 3 is Generated</strong>
+      NPC evaluates its own state by checking Layer 1 & 2 at runtime. You write the rules (conditions), the game figures out the result. No manual NPC state management needed.
+    </div>
+  </section>
+
+  <!-- 02 STORES -->
+  <section id="stores">
+    <h2><span class="num">02</span> Four Data Stores <span class="badge autoload">GAMESTATE AUTOLOAD</span></h2>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>store</th>
+            <th>type</th>
+            <th>purpose</th>
+            <th>can reset?</th>
+            <th>example</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="store">flags</td>
+            <td>bool / any</td>
+            <td>things player DID</td>
+            <td class="no">never</td>
+            <td>"met_elder": true</td>
+          </tr>
+          <tr>
+            <td class="store">quests</td>
+            <td>String</td>
+            <td>current quest stage</td>
+            <td class="opt">advances only</td>
+            <td>"main_quest": "chapter_2"</td>
+          </tr>
+          <tr>
+            <td class="store">counters</td>
+            <td>int / float</td>
+            <td>numeric values</td>
+            <td class="yes">yes</td>
+            <td>"gold": 250</td>
+          </tr>
+          <tr>
+            <td class="store">switches</td>
+            <td>bool</td>
+            <td>world state toggles</td>
+            <td class="yes">yes — on/off</td>
+            <td>"war_started": false</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <pre data-lang="GDScript"><code><span class="cm"># GameState.gd — Autoload singleton</span>
+<span class="kw">extends</span> Node
+
+<span class="cm"># things player DID — permanent</span>
+<span class="kw">var</span> <span class="vr">flags</span> = {
+    <span class="str">"met_elder"</span>: <span class="bl">false</span>,
+    <span class="str">"defeated_goblin_king"</span>: <span class="bl">false</span>,
+    <span class="str">"chose_save_village"</span>: <span class="bl">false</span>,
+    <span class="str">"chest_001_opened"</span>: <span class="bl">false</span>,
+}
+
+<span class="cm"># current quest progress</span>
+<span class="kw">var</span> <span class="vr">quests</span> = {
+    <span class="str">"main_quest"</span>: <span class="str">"not_started"</span>,
+    <span class="str">"side_quest_blacksmith"</span>: <span class="str">"not_started"</span>,
+    <span class="str">"side_quest_missing_girl"</span>: <span class="str">"not_started"</span>,
+}
+
+<span class="cm"># numeric values</span>
+<span class="kw">var</span> <span class="vr">counters</span> = {
+    <span class="str">"gold"</span>: <span class="nm">0</span>,
+    <span class="str">"enemies_killed"</span>: <span class="nm">0</span>,
+    <span class="str">"times_talked_to_elder"</span>: <span class="nm">0</span>,
+}
+
+<span class="cm"># world state toggles — can flip on/off</span>
+<span class="kw">var</span> <span class="vr">switches</span> = {
+    <span class="str">"night_mode_active"</span>: <span class="bl">false</span>,
+    <span class="str">"war_started"</span>: <span class="bl">false</span>,
+    <span class="str">"shop_closed"</span>: <span class="bl">false</span>,
+}
+
+<span class="cm"># meta</span>
+<span class="kw">var</span> <span class="vr">current_scene</span>: String = <span class="str">"town_01"</span>
+<span class="kw">var</span> <span class="vr">playtime_seconds</span>: <span class="kw">float</span> = <span class="nm">0.0</span></code></pre>
+
+    <div class="callout tip">
+      <strong>Flags vs Switches</strong>
+      flags = things player DID (permanent). switches = world STATE (can toggle). "defeated_goblin_king" is a flag — never resets. "night_mode_active" is a switch — can turn on/off anytime.
+    </div>
+  </section>
+
+  <!-- 03 CHECK FLAGS -->
+  <section id="checkflags">
+    <h2><span class="num">03</span> check_flags() — The Heart <span class="badge system">CORE</span></h2>
+    <p>One function used everywhere — NPC dialog, NPC position, doors, teleports, shops, cutscenes. Handles all four store types automatically.</p>
+
+    <pre data-lang="GDScript"><code><span class="kw">func</span> <span class="fn">check_flags</span>(<span class="vr">requires</span>: Dictionary) -> <span class="kw">bool</span>:
+    <span class="kw">for</span> <span class="vr">key</span> <span class="kw">in</span> <span class="vr">requires</span>:
+        <span class="kw">var</span> <span class="vr">expected</span> = <span class="vr">requires</span>[<span class="vr">key</span>]
+
+        <span class="cm"># handle NOT prefix — "not_met_elder": true</span>
+        <span class="kw">if</span> <span class="vr">key</span>.<span class="fn">begins_with</span>(<span class="str">"not_"</span>):
+            <span class="kw">var</span> <span class="vr">real_key</span> = <span class="vr">key</span>.<span class="fn">trim_prefix</span>(<span class="str">"not_"</span>)
+            <span class="kw">if</span> <span class="vr">flags</span>.<span class="fn">get</span>(<span class="vr">real_key</span>, <span class="bl">false</span>) == <span class="bl">true</span>:
+                <span class="kw">return false</span>
+            <span class="kw">continue</span>
+
+        <span class="cm"># boolean — flags or switches</span>
+        <span class="kw">if</span> <span class="vr">expected</span> <span class="kw">is</span> <span class="kw">bool</span>:
+            <span class="kw">var</span> <span class="vr">flag_val</span> = <span class="vr">flags</span>.<span class="fn">get</span>(<span class="vr">key</span>, <span class="bl">false</span>)
+            <span class="kw">var</span> <span class="vr">switch_val</span> = <span class="vr">switches</span>.<span class="fn">get</span>(<span class="vr">key</span>, <span class="bl">false</span>)
+            <span class="kw">if</span> <span class="vr">flag_val</span> != <span class="vr">expected</span> <span class="kw">and</span> <span class="vr">switch_val</span> != <span class="vr">expected</span>:
+                <span class="kw">return false</span>
+
+        <span class="cm"># string — quest stage exact match</span>
+        <span class="kw">elif</span> <span class="vr">expected</span> <span class="kw">is</span> String:
+            <span class="kw">if</span> <span class="vr">quests</span>.<span class="fn">get</span>(<span class="vr">key</span>, <span class="str">"not_started"</span>) != <span class="vr">expected</span>:
+                <span class="kw">return false</span>
+
+        <span class="cm"># array — quest at ANY of these stages</span>
+        <span class="kw">elif</span> <span class="vr">expected</span> <span class="kw">is</span> Array:
+            <span class="kw">if not</span> <span class="vr">quests</span>.<span class="fn">get</span>(<span class="vr">key</span>, <span class="str">"not_started"</span>) <span class="kw">in</span> <span class="vr">expected</span>:
+                <span class="kw">return false</span>
+
+        <span class="cm"># int/float — counter must be >= expected</span>
+        <span class="kw">elif</span> <span class="vr">expected</span> <span class="kw">is</span> <span class="kw">int</span> <span class="kw">or</span> <span class="vr">expected</span> <span class="kw">is</span> <span class="kw">float</span>:
+            <span class="kw">if</span> <span class="vr">counters</span>.<span class="fn">get</span>(<span class="vr">key</span>, <span class="nm">0</span>) < <span class="vr">expected</span>:
+                <span class="kw">return false</span>
+
+    <span class="kw">return true</span>  <span class="cm"># all conditions passed</span></code></pre>
+
+    <h3>// Example conditions</h3>
+    <pre data-lang="GDScript"><code><span class="cm"># simple boolean flag</span>
+{ <span class="str">"met_elder"</span>: <span class="bl">true</span> }
+
+<span class="cm"># quest at specific stage</span>
+{ <span class="str">"main_quest"</span>: <span class="str">"chapter_2"</span> }
+
+<span class="cm"># multiple conditions — ALL must pass</span>
+{ <span class="str">"met_elder"</span>: <span class="bl">true</span>, <span class="str">"main_quest"</span>: <span class="str">"chapter_2"</span> }
+
+<span class="cm"># quest at any of these stages</span>
+{ <span class="str">"main_quest"</span>: [<span class="str">"chapter_2"</span>, <span class="str">"chapter_3"</span>] }
+
+<span class="cm"># counter check — player has enough gold</span>
+{ <span class="str">"gold"</span>: <span class="nm">500</span> }
+
+<span class="cm"># world switch active</span>
+{ <span class="str">"war_started"</span>: <span class="bl">true</span> }
+
+<span class="cm"># NOT condition — quest not done yet</span>
+{ <span class="str">"not_met_elder"</span>: <span class="bl">true</span> }
+
+<span class="cm"># complex — multiple stores combined</span>
+{ <span class="str">"main_quest"</span>: <span class="str">"completed"</span>, <span class="str">"chose_save_village"</span>: <span class="bl">true</span>, <span class="str">"gold"</span>: <span class="nm">100</span> }</code></pre>
+
+    <div class="callout info">
+      <strong>Used Everywhere</strong>
+      check_flags() is the same function for NPC dialog, NPC position, door locks, teleport conditions, shop availability, cutscene triggers. One function, entire game.
+    </div>
+  </section>
+
+  <!-- 04 SETTERS -->
+  <section id="setters">
+    <h2><span class="num">04</span> Setters</h2>
+
+    <pre data-lang="GDScript"><code><span class="cm"># flags — permanent</span>
+<span class="kw">func</span> <span class="fn">set_flag</span>(<span class="vr">key</span>: String, <span class="vr">value</span>: <span class="kw">bool</span>):
+    <span class="vr">flags</span>[<span class="vr">key</span>] = <span class="vr">value</span>
+
+<span class="cm"># quests — advance stage</span>
+<span class="kw">func</span> <span class="fn">advance_quest</span>(<span class="vr">quest_id</span>: String, <span class="vr">stage</span>: String):
+    <span class="vr">quests</span>[<span class="vr">quest_id</span>] = <span class="vr">stage</span>
+
+<span class="cm"># counters</span>
+<span class="kw">func</span> <span class="fn">set_counter</span>(<span class="vr">key</span>: String, <span class="vr">value</span>: <span class="kw">int</span>):
+    <span class="vr">counters</span>[<span class="vr">key</span>] = <span class="vr">value</span>
+
+<span class="kw">func</span> <span class="fn">add_counter</span>(<span class="vr">key</span>: String, <span class="vr">amount</span>: <span class="kw">int</span>):
+    <span class="vr">counters</span>[<span class="vr">key</span>] = <span class="vr">counters</span>.<span class="fn">get</span>(<span class="vr">key</span>, <span class="nm">0</span>) + <span class="vr">amount</span>
+
+<span class="cm"># switches — world state</span>
+<span class="kw">func</span> <span class="fn">set_switch</span>(<span class="vr">key</span>: String, <span class="vr">value</span>: <span class="kw">bool</span>):
+    <span class="vr">switches</span>[<span class="vr">key</span>] = <span class="vr">value</span>
+
+<span class="kw">func</span> <span class="fn">toggle_switch</span>(<span class="vr">key</span>: String):
+    <span class="vr">switches</span>[<span class="vr">key</span>] = !<span class="vr">switches</span>.<span class="fn">get</span>(<span class="vr">key</span>, <span class="bl">false</span>)
+
+<span class="cm"># usage examples</span>
+GameState.<span class="fn">set_flag</span>(<span class="str">"defeated_goblin_king"</span>, <span class="bl">true</span>)
+GameState.<span class="fn">advance_quest</span>(<span class="str">"main_quest"</span>, <span class="str">"chapter_2"</span>)
+GameState.<span class="fn">add_counter</span>(<span class="str">"gold"</span>, <span class="nm">100</span>)
+GameState.<span class="fn">set_switch</span>(<span class="str">"war_started"</span>, <span class="bl">true</span>)
+GameState.<span class="fn">toggle_switch</span>(<span class="str">"night_mode_active"</span>)</code></pre>
+  </section>
+
+  <!-- 05 NPC -->
+  <section id="npc">
+    <h2><span class="num">05</span> NPC Behavior <span class="badge npc">NPC</span></h2>
+    <p>NPC defines a list of conditions. First matching condition wins. Last entry is always the default (empty requires = always matches).</p>
+
+    <pre data-lang="GDScript"><code><span class="cm"># NPC_Elder.gd</span>
+<span class="kw">extends</span> CharacterBody3D
+
+<span class="cm"># conditions checked top to bottom — first match wins</span>
+<span class="kw">var</span> <span class="vr">conditions</span> = [
+    {
+        <span class="str">"requires"</span>: { <span class="str">"main_quest"</span>: <span class="str">"completed"</span>, <span class="str">"chose_save_village"</span>: <span class="bl">true</span> },
+        <span class="str">"dialog"</span>: <span class="nm">200</span>,
+        <span class="str">"position"</span>: <span class="str">"marker_throne_room"</span>
+    },
+    {
+        <span class="str">"requires"</span>: { <span class="str">"defeated_goblin_king"</span>: <span class="bl">true</span> },
+        <span class="str">"dialog"</span>: <span class="nm">150</span>,
+        <span class="str">"position"</span>: <span class="str">"marker_tavern"</span>
+    },
+    {
+        <span class="str">"requires"</span>: { <span class="str">"met_elder"</span>: <span class="bl">true</span> },
+        <span class="str">"dialog"</span>: <span class="nm">142</span>,
+        <span class="str">"position"</span>: <span class="str">"marker_house"</span>
+    },
+    {
+        <span class="str">"requires"</span>: {},  <span class="cm"># default — always matches</span>
+        <span class="str">"dialog"</span>: <span class="nm">100</span>,
+        <span class="str">"position"</span>: <span class="str">"marker_market"</span>
+    },
+]
+
+<span class="kw">func</span> <span class="fn">get_current_state</span>() -> Dictionary:
+    <span class="kw">for</span> <span class="vr">condition</span> <span class="kw">in</span> <span class="vr">conditions</span>:
+        <span class="kw">if</span> GameState.<span class="fn">check_flags</span>(<span class="vr">condition</span>[<span class="str">"requires"</span>]):
+            <span class="kw">return</span> <span class="vr">condition</span>
+    <span class="kw">return</span> <span class="vr">conditions</span>[-<span class="nm">1</span>]  <span class="cm"># fallback</span>
+
+<span class="cm"># position evaluated on scene load</span>
+<span class="kw">func</span> <span class="fn">_ready</span>():
+    <span class="kw">var</span> <span class="vr">state</span> = <span class="fn">get_current_state</span>()
+    <span class="kw">var</span> <span class="vr">marker</span> = <span class="fn">get_node</span>(<span class="vr">state</span>[<span class="str">"position"</span>])
+    global_position = <span class="vr">marker</span>.global_position
+    global_rotation = <span class="vr">marker</span>.global_rotation  <span class="cm"># facing direction</span>
+
+<span class="cm"># dialog evaluated on player interact</span>
+<span class="kw">func</span> <span class="fn">on_player_interact</span>():
+    <span class="kw">var</span> <span class="vr">state</span> = <span class="fn">get_current_state</span>()
+    DialogSystem.<span class="fn">start</span>(<span class="vr">state</span>[<span class="str">"dialog"</span>])</code></pre>
+
+    <div class="callout tip">
+      <strong>Position vs Dialog timing</strong>
+      Position evaluated on _ready() — when scene loads. Dialog evaluated on interact — when player talks. Both call get_current_state() but at different moments.
+    </div>
+  </section>
+
+  <!-- 06 MARKERS -->
+  <section id="markers">
+    <h2><span class="num">06</span> Position Markers</h2>
+    <p>Empty Node3D nodes placed in the scene by the artist. NPC reads position AND rotation from marker — no code needed for facing direction.</p>
+
+    <pre data-lang="GDScript"><code><span class="cm"># Scene tree example for Town:</span>
+<span class="cm"># Town (Node3D)</span>
+<span class="cm">#   ├── NPCs</span>
+<span class="cm">#   │     └── Elder (NPC_Elder.gd)</span>
+<span class="cm">#   └── Markers (Node3D — invisible at runtime)</span>
+<span class="cm">#         ├── marker_market    ← artist places + rotates</span>
+<span class="cm">#         ├── marker_house     ← artist places + rotates</span>
+<span class="cm">#         ├── marker_tavern    ← artist places + rotates</span>
+<span class="cm">#         └── marker_throne_room ← artist places + rotates</span>
+
+<span class="cm"># NPC reads both position and rotation from marker</span>
+<span class="kw">var</span> <span class="vr">marker</span> = <span class="fn">get_node</span>(<span class="vr">state</span>[<span class="str">"position"</span>])
+global_position = <span class="vr">marker</span>.global_position  <span class="cm"># where to stand</span>
+global_rotation = <span class="vr">marker</span>.global_rotation  <span class="cm"># which way to face</span></code></pre>
+
+    <div class="callout blue">
+      <strong>Also Used in Door System</strong>
+      Same marker concept used for door spawn points. Player arrives at destination door marker — copies position AND rotation. Facing direction set by artist in editor.
+    </div>
+  </section>
+
+  <!-- 07 TRIGGERS -->
+  <section id="triggers">
+    <h2><span class="num">07</span> What Triggers Flags</h2>
+
+    <pre data-lang="GDScript"><code><span class="cm"># 1. Dialog sets flag on finish</span>
+<span class="cm"># in dialog data:</span>
+{
+    <span class="str">"dialog_id"</span>: <span class="nm">100</span>,
+    <span class="str">"text"</span>: <span class="str">"Welcome traveler..."</span>,
+    <span class="str">"on_finish"</span>: {
+        <span class="str">"set_flag"</span>: { <span class="str">"met_elder"</span>: <span class="bl">true</span> },
+        <span class="str">"advance_quest"</span>: { <span class="str">"main_quest"</span>: <span class="str">"chapter_1"</span> }
+    }
+}
+<span class="cm"># dialog system calls GameState.set_flag() when done</span>
+
+<span class="cm"># 2. Enemy defeated</span>
+<span class="kw">func</span> <span class="fn">on_defeated</span>():
+    GameState.<span class="fn">set_flag</span>(<span class="str">"defeated_goblin_king"</span>, <span class="bl">true</span>)
+    GameState.<span class="fn">advance_quest</span>(<span class="str">"main_quest"</span>, <span class="str">"chapter_2"</span>)
+    GameState.<span class="fn">add_counter</span>(<span class="str">"enemies_killed"</span>, <span class="nm">1</span>)
+
+<span class="cm"># 3. Item obtained</span>
+<span class="kw">func</span> <span class="fn">on_item_picked_up</span>(<span class="vr">item_id</span>: String):
+    GameState.<span class="fn">set_flag</span>(<span class="vr">item_id</span> + <span class="str">"_obtained"</span>, <span class="bl">true</span>)
+
+<span class="cm"># 4. Chest opened — one time event</span>
+<span class="kw">func</span> <span class="fn">on_chest_opened</span>():
+    GameState.<span class="fn">set_flag</span>(<span class="str">"chest_001_opened"</span>, <span class="bl">true</span>)
+
+<span class="cm"># 5. World event</span>
+<span class="kw">func</span> <span class="fn">trigger_war</span>():
+    GameState.<span class="fn">set_switch</span>(<span class="str">"war_started"</span>, <span class="bl">true</span>)
+
+<span class="cm"># 6. Gold transaction</span>
+<span class="kw">func</span> <span class="fn">buy_item</span>(<span class="vr">cost</span>: <span class="kw">int</span>):
+    GameState.<span class="fn">add_counter</span>(<span class="str">"gold"</span>, -<span class="vr">cost</span>)</code></pre>
+  </section>
+
+  <!-- 08 SAVE -->
+  <section id="save">
+    <h2><span class="num">08</span> Save System — Unlimited Slots</h2>
+    <p>Each save slot is a JSON file. No slot limit — modern storage is not a concern. Files named by slot number.</p>
+
+    <pre data-lang="GDScript"><code><span class="kw">func</span> <span class="fn">_ready</span>():
+    <span class="cm"># create saves folder if not exists</span>
+    <span class="kw">if not</span> DirAccess.<span class="fn">dir_exists_absolute</span>(<span class="str">"user://saves/"</span>):
+        DirAccess.<span class="fn">make_dir_absolute</span>(<span class="str">"user://saves/"</span>)
+
+<span class="kw">func</span> <span class="fn">save_game</span>(<span class="vr">slot</span>: <span class="kw">int</span>):
+    <span class="kw">var</span> <span class="vr">save_data</span> = {
+        <span class="str">"slot"</span>: <span class="vr">slot</span>,
+        <span class="str">"timestamp"</span>: Time.<span class="fn">get_datetime_string_from_system</span>(),
+        <span class="str">"playtime"</span>: <span class="vr">playtime_seconds</span>,
+        <span class="str">"location"</span>: <span class="vr">current_scene</span>,
+        <span class="str">"flags"</span>: <span class="vr">flags</span>,
+        <span class="str">"quests"</span>: <span class="vr">quests</span>,
+        <span class="str">"counters"</span>: <span class="vr">counters</span>,
+        <span class="str">"switches"</span>: <span class="vr">switches</span>,
+    }
+
+    <span class="kw">var</span> <span class="vr">file</span> = FileAccess.<span class="fn">open</span>(
+        <span class="str">"user://saves/save_%03d.json"</span> % <span class="vr">slot</span>,
+        FileAccess.WRITE
+    )
+    <span class="vr">file</span>.<span class="fn">store_string</span>(JSON.<span class="fn">stringify</span>(<span class="vr">save_data</span>))
+    <span class="vr">file</span>.<span class="fn">close</span>()
+    <span class="fn">print</span>(<span class="str">"[SAVE] slot %d saved"</span> % <span class="vr">slot</span>)</code></pre>
+  </section>
+
+  <!-- 09 LOAD -->
+  <section id="load">
+    <h2><span class="num">09</span> Load System</h2>
+
+    <pre data-lang="GDScript"><code><span class="kw">func</span> <span class="fn">load_game</span>(<span class="vr">slot</span>: <span class="kw">int</span>):
+    <span class="kw">var</span> <span class="vr">path</span> = <span class="str">"user://saves/save_%03d.json"</span> % <span class="vr">slot</span>
+
+    <span class="kw">if not</span> FileAccess.<span class="fn">file_exists</span>(<span class="vr">path</span>):
+        <span class="fn">print</span>(<span class="str">"[LOAD] no save at slot %d"</span> % <span class="vr">slot</span>)
+        <span class="kw">return</span>
+
+    <span class="kw">var</span> <span class="vr">file</span> = FileAccess.<span class="fn">open</span>(<span class="vr">path</span>, FileAccess.READ)
+    <span class="kw">var</span> <span class="vr">data</span> = JSON.<span class="fn">parse_string</span>(<span class="vr">file</span>.<span class="fn">get_as_text</span>())
+    <span class="vr">file</span>.<span class="fn">close</span>()
+
+    <span class="cm"># restore all four stores</span>
+    <span class="vr">flags</span> = <span class="vr">data</span>[<span class="str">"flags"</span>]
+    <span class="vr">quests</span> = <span class="vr">data</span>[<span class="str">"quests"</span>]
+    <span class="vr">counters</span> = <span class="vr">data</span>[<span class="str">"counters"</span>]
+    <span class="vr">switches</span> = <span class="vr">data</span>[<span class="str">"switches"</span>]
+    <span class="vr">current_scene</span> = <span class="vr">data</span>[<span class="str">"location"</span>]
+    <span class="vr">playtime_seconds</span> = <span class="vr">data</span>[<span class="str">"playtime"</span>]
+
+    <span class="cm"># load scene player was in</span>
+    get_tree().<span class="fn">change_scene_to_file</span>(
+        <span class="str">"res://scenes/"</span> + <span class="vr">current_scene</span> + <span class="str">".tscn"</span>
+    )
+
+    <span class="fn">print</span>(<span class="str">"[LOAD] slot %d loaded"</span> % <span class="vr">slot</span>)</code></pre>
+  </section>
+
+  <!-- 10 SLOTS -->
+  <section id="slots">
+    <h2><span class="num">10</span> Save Slot Management</h2>
+
+    <pre data-lang="GDScript"><code><span class="cm"># list all saves — for save screen UI</span>
+<span class="kw">func</span> <span class="fn">get_all_saves</span>() -> Array:
+    <span class="kw">var</span> <span class="vr">saves</span> = []
+    <span class="kw">var</span> <span class="vr">dir</span> = DirAccess.<span class="fn">open</span>(<span class="str">"user://saves/"</span>)
+
+    <span class="kw">if</span> <span class="vr">dir</span>:
+        <span class="vr">dir</span>.<span class="fn">list_dir_begin</span>()
+        <span class="kw">var</span> <span class="vr">file_name</span> = <span class="vr">dir</span>.<span class="fn">get_next</span>()
+        <span class="kw">while</span> <span class="vr">file_name</span> != <span class="str">""</span>:
+            <span class="kw">if</span> <span class="vr">file_name</span>.<span class="fn">ends_with</span>(<span class="str">".json"</span>):
+                <span class="kw">var</span> <span class="vr">file</span> = FileAccess.<span class="fn">open</span>(
+                    <span class="str">"user://saves/"</span> + <span class="vr">file_name</span>,
+                    FileAccess.READ
+                )
+                <span class="vr">saves</span>.<span class="fn">append</span>(JSON.<span class="fn">parse_string</span>(<span class="vr">file</span>.<span class="fn">get_as_text</span>()))
+                <span class="vr">file</span>.<span class="fn">close</span>()
+            <span class="vr">file_name</span> = <span class="vr">dir</span>.<span class="fn">get_next</span>()
+
+    <span class="cm"># sort newest first</span>
+    <span class="vr">saves</span>.<span class="fn">sort_custom</span>(<span class="kw">func</span>(<span class="vr">a</span>, <span class="vr">b</span>): <span class="kw">return</span> <span class="vr">a</span>[<span class="str">"timestamp"</span>] > <span class="vr">b</span>[<span class="str">"timestamp"</span>])
+    <span class="kw">return</span> <span class="vr">saves</span>
+
+<span class="cm"># delete a save slot</span>
+<span class="kw">func</span> <span class="fn">delete_save</span>(<span class="vr">slot</span>: <span class="kw">int</span>):
+    <span class="kw">var</span> <span class="vr">path</span> = <span class="str">"user://saves/save_%03d.json"</span> % <span class="vr">slot</span>
+    <span class="kw">if</span> FileAccess.<span class="fn">file_exists</span>(<span class="vr">path</span>):
+        DirAccess.<span class="fn">remove_absolute</span>(<span class="vr">path</span>)
+        <span class="fn">print</span>(<span class="str">"[SAVE] slot %d deleted"</span> % <span class="vr">slot</span>)
+
+<span class="cm"># get next available slot number</span>
+<span class="kw">func</span> <span class="fn">get_next_slot</span>() -> <span class="kw">int</span>:
+    <span class="kw">var</span> <span class="vr">slot</span> = <span class="nm">1</span>
+    <span class="kw">while</span> FileAccess.<span class="fn">file_exists</span>(<span class="str">"user://saves/save_%03d.json"</span> % <span class="vr">slot</span>):
+        <span class="vr">slot</span> += <span class="nm">1</span>
+    <span class="kw">return</span> <span class="vr">slot</span></code></pre>
+
+    <div class="callout tip">
+      <strong>What each save file contains</strong>
+      slot · timestamp · playtime · location · flags · quests · counters · switches. No save limit — files grow as player saves more. Modern storage handles this easily.
+    </div>
+  </section>
+
+  <!-- 11 FULL GAMESTATE -->
+  <section id="gamestate">
+    <h2><span class="num">11</span> Full GameState Code <span class="badge autoload">AUTOLOAD</span></h2>
+
+    <pre data-lang="GDScript"><code><span class="cm"># GameState.gd — Add to Autoload in Project Settings</span>
+<span class="kw">extends</span> Node
+
+<span class="cm"># =============================================</span>
+<span class="cm"># DATA STORES</span>
+<span class="cm"># =============================================</span>
+<span class="kw">var</span> <span class="vr">flags</span>    = {}
+<span class="kw">var</span> <span class="vr">quests</span>   = {}
+<span class="kw">var</span> <span class="vr">counters</span> = {}
+<span class="kw">var</span> <span class="vr">switches</span> = {}
+<span class="kw">var</span> <span class="vr">current_scene</span>: String = <span class="str">""</span>
+<span class="kw">var</span> <span class="vr">playtime_seconds</span>: <span class="kw">float</span> = <span class="nm">0.0</span>
+<span class="kw">var</span> <span class="vr">spawn_door_id</span>: String = <span class="str">""</span>  <span class="cm"># used by door system</span>
+
+<span class="kw">func</span> <span class="fn">_ready</span>():
+    <span class="kw">if not</span> DirAccess.<span class="fn">dir_exists_absolute</span>(<span class="str">"user://saves/"</span>):
+        DirAccess.<span class="fn">make_dir_absolute</span>(<span class="str">"user://saves/"</span>)
+    <span class="fn">init_default_state</span>()
+
+<span class="kw">func</span> <span class="fn">init_default_state</span>():
+    <span class="cm"># define all flags with defaults here</span>
+    <span class="vr">flags</span> = {
+        <span class="str">"met_elder"</span>: <span class="bl">false</span>,
+        <span class="str">"defeated_goblin_king"</span>: <span class="bl">false</span>,
+    }
+    <span class="vr">quests</span> = {
+        <span class="str">"main_quest"</span>: <span class="str">"not_started"</span>,
+    }
+    <span class="vr">counters</span> = {
+        <span class="str">"gold"</span>: <span class="nm">0</span>,
+        <span class="str">"enemies_killed"</span>: <span class="nm">0</span>,
+    }
+    <span class="vr">switches</span> = {
+        <span class="str">"night_mode_active"</span>: <span class="bl">false</span>,
+        <span class="str">"war_started"</span>: <span class="bl">false</span>,
+    }
+
+<span class="cm"># =============================================</span>
+<span class="cm"># READ</span>
+<span class="cm"># =============================================</span>
+<span class="kw">func</span> <span class="fn">check_flags</span>(<span class="vr">requires</span>: Dictionary) -> <span class="kw">bool</span>:
+    <span class="kw">for</span> <span class="vr">key</span> <span class="kw">in</span> <span class="vr">requires</span>:
+        <span class="kw">var</span> <span class="vr">expected</span> = <span class="vr">requires</span>[<span class="vr">key</span>]
+        <span class="kw">if</span> <span class="vr">key</span>.<span class="fn">begins_with</span>(<span class="str">"not_"</span>):
+            <span class="kw">var</span> <span class="vr">rk</span> = <span class="vr">key</span>.<span class="fn">trim_prefix</span>(<span class="str">"not_"</span>)
+            <span class="kw">if</span> <span class="vr">flags</span>.<span class="fn">get</span>(<span class="vr">rk</span>, <span class="bl">false</span>) == <span class="bl">true</span>: <span class="kw">return false</span>
+            <span class="kw">continue</span>
+        <span class="kw">if</span> <span class="vr">expected</span> <span class="kw">is</span> <span class="kw">bool</span>:
+            <span class="kw">if</span> <span class="vr">flags</span>.<span class="fn">get</span>(<span class="vr">key</span>, <span class="bl">false</span>) != <span class="vr">expected</span> <span class="kw">and</span> <span class="vr">switches</span>.<span class="fn">get</span>(<span class="vr">key</span>, <span class="bl">false</span>) != <span class="vr">expected</span>:
+                <span class="kw">return false</span>
+        <span class="kw">elif</span> <span class="vr">expected</span> <span class="kw">is</span> String:
+            <span class="kw">if</span> <span class="vr">quests</span>.<span class="fn">get</span>(<span class="vr">key</span>, <span class="str">"not_started"</span>) != <span class="vr">expected</span>: <span class="kw">return false</span>
+        <span class="kw">elif</span> <span class="vr">expected</span> <span class="kw">is</span> Array:
+            <span class="kw">if not</span> <span class="vr">quests</span>.<span class="fn">get</span>(<span class="vr">key</span>, <span class="str">"not_started"</span>) <span class="kw">in</span> <span class="vr">expected</span>: <span class="kw">return false</span>
+        <span class="kw">elif</span> <span class="vr">expected</span> <span class="kw">is</span> <span class="kw">int</span> <span class="kw">or</span> <span class="vr">expected</span> <span class="kw">is</span> <span class="kw">float</span>:
+            <span class="kw">if</span> <span class="vr">counters</span>.<span class="fn">get</span>(<span class="vr">key</span>, <span class="nm">0</span>) < <span class="vr">expected</span>: <span class="kw">return false</span>
+    <span class="kw">return true</span>
+
+<span class="cm"># =============================================</span>
+<span class="cm"># WRITE</span>
+<span class="cm"># =============================================</span>
+<span class="kw">func</span> <span class="fn">set_flag</span>(<span class="vr">key</span>: String, <span class="vr">value</span>: <span class="kw">bool</span>):       <span class="vr">flags</span>[<span class="vr">key</span>] = <span class="vr">value</span>
+<span class="kw">func</span> <span class="fn">advance_quest</span>(<span class="vr">id</span>: String, <span class="vr">stage</span>: String): <span class="vr">quests</span>[<span class="vr">id</span>] = <span class="vr">stage</span>
+<span class="kw">func</span> <span class="fn">set_counter</span>(<span class="vr">key</span>: String, <span class="vr">val</span>: <span class="kw">int</span>):       <span class="vr">counters</span>[<span class="vr">key</span>] = <span class="vr">val</span>
+<span class="kw">func</span> <span class="fn">add_counter</span>(<span class="vr">key</span>: String, <span class="vr">amt</span>: <span class="kw">int</span>):       <span class="vr">counters</span>[<span class="vr">key</span>] = <span class="vr">counters</span>.<span class="fn">get</span>(<span class="vr">key</span>, <span class="nm">0</span>) + <span class="vr">amt</span>
+<span class="kw">func</span> <span class="fn">set_switch</span>(<span class="vr">key</span>: String, <span class="vr">val</span>: <span class="kw">bool</span>):       <span class="vr">switches</span>[<span class="vr">key</span>] = <span class="vr">val</span>
+<span class="kw">func</span> <span class="fn">toggle_switch</span>(<span class="vr">key</span>: String):               <span class="vr">switches</span>[<span class="vr">key</span>] = !<span class="vr">switches</span>.<span class="fn">get</span>(<span class="vr">key</span>, <span class="bl">false</span>)
+
+<span class="cm"># =============================================</span>
+<span class="cm"># SAVE / LOAD</span>
+<span class="cm"># =============================================</span>
+<span class="kw">func</span> <span class="fn">save_game</span>(<span class="vr">slot</span>: <span class="kw">int</span>):
+    <span class="kw">var</span> <span class="vr">data</span> = {
+        <span class="str">"slot"</span>: <span class="vr">slot</span>, <span class="str">"timestamp"</span>: Time.<span class="fn">get_datetime_string_from_system</span>(),
+        <span class="str">"playtime"</span>: <span class="vr">playtime_seconds</span>, <span class="str">"location"</span>: <span class="vr">current_scene</span>,
+        <span class="str">"flags"</span>: <span class="vr">flags</span>, <span class="str">"quests"</span>: <span class="vr">quests</span>, <span class="str">"counters"</span>: <span class="vr">counters</span>, <span class="str">"switches"</span>: <span class="vr">switches</span>,
+    }
+    <span class="kw">var</span> <span class="vr">f</span> = FileAccess.<span class="fn">open</span>(<span class="str">"user://saves/save_%03d.json"</span> % <span class="vr">slot</span>, FileAccess.WRITE)
+    <span class="vr">f</span>.<span class="fn">store_string</span>(JSON.<span class="fn">stringify</span>(<span class="vr">data</span>))
+    <span class="vr">f</span>.<span class="fn">close</span>()
+
+<span class="kw">func</span> <span class="fn">load_game</span>(<span class="vr">slot</span>: <span class="kw">int</span>):
+    <span class="kw">var</span> <span class="vr">path</span> = <span class="str">"user://saves/save_%03d.json"</span> % <span class="vr">slot</span>
+    <span class="kw">if not</span> FileAccess.<span class="fn">file_exists</span>(<span class="vr">path</span>): <span class="kw">return</span>
+    <span class="kw">var</span> <span class="vr">f</span> = FileAccess.<span class="fn">open</span>(<span class="vr">path</span>, FileAccess.READ)
+    <span class="kw">var</span> <span class="vr">data</span> = JSON.<span class="fn">parse_string</span>(<span class="vr">f</span>.<span class="fn">get_as_text</span>())
+    <span class="vr">f</span>.<span class="fn">close</span>()
+    <span class="vr">flags</span> = <span class="vr">data</span>[<span class="str">"flags"</span>]; <span class="vr">quests</span> = <span class="vr">data</span>[<span class="str">"quests"</span>]
+    <span class="vr">counters</span> = <span class="vr">data</span>[<span class="str">"counters"</span>]; <span class="vr">switches</span> = <span class="vr">data</span>[<span class="str">"switches"</span>]
+    <span class="vr">current_scene</span> = <span class="vr">data</span>[<span class="str">"location"</span>]; <span class="vr">playtime_seconds</span> = <span class="vr">data</span>[<span class="str">"playtime"</span>]
+    get_tree().<span class="fn">change_scene_to_file</span>(<span class="str">"res://scenes/"</span> + <span class="vr">current_scene</span> + <span class="str">".tscn"</span>)
+
+<span class="kw">func</span> <span class="fn">get_all_saves</span>() -> Array:
+    <span class="kw">var</span> <span class="vr">saves</span> = []
+    <span class="kw">var</span> <span class="vr">dir</span> = DirAccess.<span class="fn">open</span>(<span class="str">"user://saves/"</span>)
+    <span class="kw">if</span> <span class="vr">dir</span>:
+        <span class="vr">dir</span>.<span class="fn">list_dir_begin</span>()
+        <span class="kw">var</span> <span class="vr">fn</span> = <span class="vr">dir</span>.<span class="fn">get_next</span>()
+        <span class="kw">while</span> <span class="vr">fn</span> != <span class="str">""</span>:
+            <span class="kw">if</span> <span class="vr">fn</span>.<span class="fn">ends_with</span>(<span class="str">".json"</span>):
+                <span class="kw">var</span> <span class="vr">f</span> = FileAccess.<span class="fn">open</span>(<span class="str">"user://saves/"</span> + <span class="vr">fn</span>, FileAccess.READ)
+                <span class="vr">saves</span>.<span class="fn">append</span>(JSON.<span class="fn">parse_string</span>(<span class="vr">f</span>.<span class="fn">get_as_text</span>()))
+                <span class="vr">f</span>.<span class="fn">close</span>()
+            <span class="vr">fn</span> = <span class="vr">dir</span>.<span class="fn">get_next</span>()
+    <span class="vr">saves</span>.<span class="fn">sort_custom</span>(<span class="kw">func</span>(<span class="vr">a</span>,<span class="vr">b</span>): <span class="kw">return</span> <span class="vr">a</span>[<span class="str">"timestamp"</span>] > <span class="vr">b</span>[<span class="str">"timestamp"</span>])
+    <span class="kw">return</span> <span class="vr">saves</span>
+
+<span class="kw">func</span> <span class="fn">delete_save</span>(<span class="vr">slot</span>: <span class="kw">int</span>):
+    DirAccess.<span class="fn">remove_absolute</span>(<span class="str">"user://saves/save_%03d.json"</span> % <span class="vr">slot</span>)
+
+<span class="kw">func</span> <span class="fn">get_next_slot</span>() -> <span class="kw">int</span>:
+    <span class="kw">var</span> <span class="vr">slot</span> = <span class="nm">1</span>
+    <span class="kw">while</span> FileAccess.<span class="fn">file_exists</span>(<span class="str">"user://saves/save_%03d.json"</span> % <span class="vr">slot</span>): <span class="vr">slot</span> += <span class="nm">1</span>
+    <span class="kw">return</span> <span class="vr">slot</span></code></pre>
+  </section>
+
+  <!-- 12 SUMMARY -->
+  <section id="summary">
+    <h2><span class="num">12</span> Summary</h2>
+
+    <ul class="checklist">
+      <li>Three layers — <strong>Flag Store, Quest State, NPC Reaction</strong></li>
+      <li>Four data stores — <strong>flags, quests, counters, switches</strong></li>
+      <li><strong>check_flags()</strong> is one function used by everything in the game</li>
+      <li>NPC conditions checked <strong>top to bottom</strong> — first match wins</li>
+      <li>NPC <strong>position</strong> evaluated on scene load (_ready)</li>
+      <li>NPC <strong>dialog</strong> evaluated on player interact</li>
+      <li>Position markers store <strong>position AND rotation</strong> — artist sets facing in editor</li>
+      <li>Same markers concept used in <strong>door system</strong></li>
+      <li>Flags set by <strong>dialog, combat, items, world events</strong></li>
+      <li>Save files are <strong>JSON</strong> — unlimited slots, no size limit</li>
+      <li>Load restores all four stores then <strong>changes scene</strong> automatically</li>
+      <li>GameState is <strong>Autoload</strong> — accessible from anywhere in game</li>
+    </ul>
+
+    <div class="callout tip">
+      <strong>Build Order</strong>
+      Build GameState autoload first. Test set_flag + check_flags with one NPC. Then add save/load. Then multiply to many NPCs. All systems (doors, teleport, cutscene) already connect to GameState — no extra work needed.
+    </div>
+  </section>
+
+  <footer>
+    <span>// quest-flag-system · godot 4 · 3d · gdscript</span>
+    <span>personal dev docs · keep for reference</span>
+  </footer>
+
+</div>
+</body>
+</html>

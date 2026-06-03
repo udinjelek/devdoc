@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Game Dev Docs — Godot 4</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #0d1220;
+    --bg2: #111a2e;
+    --bg3: #172340;
+    --accent: #47aaff;
+    --accent2: #ff6b6b;
+    --accent3: #ffd447;
+    --accent4: #47ffd4;
+    --text: #c8d8f0;
+    --text-dim: #4a6a8a;
+    --border: #1e2d4a;
+    --code-bg: #080d18;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    line-height: 1.7;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(71,170,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(71,170,255,0.025) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 700px;
+    width: 100%;
+    padding: 60px 24px 80px;
+    position: relative;
+    z-index: 1;
+  }
+
+  header {
+    margin-bottom: 56px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 32px;
+  }
+
+  .tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    display: block;
+  }
+
+  h1 {
+    font-size: clamp(28px, 5vw, 42px);
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.1;
+    margin-bottom: 12px;
+  }
+
+  h1 span { color: var(--accent); }
+
+  .subtitle {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--text-dim);
+  }
+
+  .doc-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .doc-card {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-left: 3px solid transparent;
+    padding: 20px 24px;
+    text-decoration: none;
+    border-radius: 2px;
+    transition: all 0.15s;
+    position: relative;
+  }
+
+  .doc-card:hover {
+    border-left-color: var(--accent);
+    background: var(--bg3);
+    transform: translateX(4px);
+  }
+
+  .doc-card:hover .card-arrow { color: var(--accent); }
+
+  .card-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    background: rgba(71,170,255,0.08);
+    border: 1px solid rgba(71,170,255,0.2);
+    padding: 2px 8px;
+    min-width: 36px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .card-body { flex: 1; }
+
+  .card-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #fff;
+    display: block;
+    margin-bottom: 2px;
+  }
+
+  .card-desc {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 0.5px;
+  }
+
+  .card-arrow {
+    font-size: 18px;
+    color: var(--border);
+    flex-shrink: 0;
+    transition: color 0.15s;
+  }
+
+  footer {
+    margin-top: 48px;
+    border-top: 1px solid var(--border);
+    padding-top: 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <span class="tag">Godot 4 · 3D · GDScript · Personal Reference</span>
+    <h1><span>Game Dev</span> Docs</h1>
+    <p class="subtitle">// personal system documentation · select a doc to read</p>
+  </header>
+
+  <div class="doc-grid">
+
+    <a class="doc-card" href="teetering_system_doc.html">
+      <span class="card-num">01</span>
+      <div class="card-body">
+        <span class="card-title">Teetering System</span>
+        <span class="card-desc">Edge detection · ledge fall · bubble indicator</span>
+      </div>
+      <span class="card-arrow">→</span>
+    </a>
+
+    <a class="doc-card" href="door_teleport_doc.html">
+      <span class="card-num">02</span>
+      <div class="card-body">
+        <span class="card-title">Door & Teleport System</span>
+        <span class="card-desc">Scene transitions · warping · door triggers</span>
+      </div>
+      <span class="card-arrow">→</span>
+    </a>
+
+    <a class="doc-card" href="quest_flag_doc.html">
+      <span class="card-num">03</span>
+      <div class="card-body">
+        <span class="card-title">Quest Flag System</span>
+        <span class="card-desc">Flags · state tracking · progression</span>
+      </div>
+      <span class="card-arrow">→</span>
+    </a>
+
+    <a class="doc-card" href="shatter_transition_doc.html">
+      <span class="card-num">04</span>
+      <div class="card-body">
+        <span class="card-title">Shatter Transition</span>
+        <span class="card-desc">Screen effects · shatter · scene transitions</span>
+      </div>
+      <span class="card-arrow">→</span>
+    </a>
+
+    <a class="doc-card" href="cutscene_system_doc.html">
+      <span class="card-num">05</span>
+      <div class="card-body">
+        <span class="card-title">Cutscene System</span>
+        <span class="card-desc">Sequences · dialogue · cinematic flow</span>
+      </div>
+      <span class="card-arrow">→</span>
+    </a>
+
+  </div>
+
+  <footer>
+    <span>// game-dev-docs · godot 4 · gdscript</span>
+    <span>personal reference · keep for dev</span>
+  </footer>
+
+</div>
+</body>
+</html>

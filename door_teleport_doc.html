@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Door & Teleport System — Game Dev Docs</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #0d0f1a;
+    --bg2: #131626;
+    --bg3: #1a1f35;
+    --accent: #00e5ff;
+    --accent2: #ff6b6b;
+    --accent3: #a8ff78;
+    --text: #c8d0e8;
+    --text-dim: #6b7599;
+    --border: #2a3050;
+    --code-bg: #0a0c16;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    line-height: 1.7;
+    min-height: 100vh;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  header {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 32px;
+    margin-bottom: 48px;
+  }
+
+  .tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: block;
+  }
+
+  h1 {
+    font-size: clamp(28px, 5vw, 44px);
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.1;
+    margin-bottom: 16px;
+  }
+
+  h1 span { color: var(--accent); }
+
+  .subtitle {
+    color: var(--text-dim);
+    font-size: 14px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* Nav */
+  .toc {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    padding: 20px 24px;
+    margin-bottom: 48px;
+    border-radius: 2px;
+  }
+
+  .toc-title {
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--accent);
+    font-family: 'JetBrains Mono', monospace;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+  }
+
+  .toc a {
+    display: block;
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 13px;
+    padding: 3px 0;
+    font-family: 'JetBrains Mono', monospace;
+    transition: color 0.2s;
+  }
+
+  .toc a:hover { color: var(--accent); }
+  .toc a::before { content: '→ '; color: var(--accent); }
+
+  /* Sections */
+  section {
+    margin-bottom: 56px;
+  }
+
+  h2 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  h2 .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+    background: rgba(0,229,255,0.08);
+    padding: 2px 8px;
+    border: 1px solid rgba(0,229,255,0.2);
+  }
+
+  h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--accent3);
+    margin: 24px 0 10px;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 1px;
+  }
+
+  p {
+    font-size: 14px;
+    color: var(--text);
+    margin-bottom: 14px;
+  }
+
+  /* Callout boxes */
+  .callout {
+    padding: 16px 20px;
+    margin: 20px 0;
+    border-radius: 2px;
+    font-size: 13px;
+    border-left: 3px solid;
+  }
+
+  .callout.info {
+    background: rgba(0,229,255,0.06);
+    border-color: var(--accent);
+    color: var(--text);
+  }
+
+  .callout.warning {
+    background: rgba(255,107,107,0.06);
+    border-color: var(--accent2);
+    color: var(--text);
+  }
+
+  .callout.success {
+    background: rgba(168,255,120,0.06);
+    border-color: var(--accent3);
+    color: var(--text);
+  }
+
+  .callout strong {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .callout.info strong { color: var(--accent); }
+  .callout.warning strong { color: var(--accent2); }
+  .callout.success strong { color: var(--accent3); }
+
+  /* Code blocks */
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 20px;
+    overflow-x: auto;
+    margin: 16px 0;
+    position: relative;
+  }
+
+  pre::before {
+    content: attr(data-lang);
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+  }
+
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.8;
+    color: var(--text);
+  }
+
+  .kw { color: #c792ea; }
+  .fn { color: #82aaff; }
+  .str { color: #c3e88d; }
+  .cm { color: #546e7a; font-style: italic; }
+  .num { color: #f78c6c; }
+  .var { color: var(--accent); }
+
+  /* Tables */
+  .table-wrap {
+    overflow-x: auto;
+    margin: 16px 0;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  th {
+    background: var(--bg3);
+    color: var(--accent);
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: top;
+  }
+
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+
+  td.door-x { color: #82aaff; }
+  td.door-y { color: #c792ea; }
+  td.condition { color: var(--accent3); }
+  td.empty { color: var(--text-dim); }
+
+  /* Flow diagram */
+  .flow {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin: 20px 0;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .flow-box {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    padding: 10px 16px;
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text);
+    border-radius: 2px;
+    white-space: nowrap;
+  }
+
+  .flow-box.highlight { border-color: var(--accent); color: var(--accent); }
+  .flow-box.warn { border-color: var(--accent2); color: var(--accent2); }
+  .flow-box.ok { border-color: var(--accent3); color: var(--accent3); }
+
+  .flow-arrow {
+    color: var(--text-dim);
+    font-size: 18px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* Badge */
+  .badge {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 2px;
+    letter-spacing: 1px;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+
+  .badge.system { background: rgba(0,229,255,0.1); color: var(--accent); border: 1px solid rgba(0,229,255,0.2); }
+  .badge.table { background: rgba(168,255,120,0.1); color: var(--accent3); border: 1px solid rgba(168,255,120,0.2); }
+
+  /* Summary checklist */
+  .checklist {
+    list-style: none;
+    margin: 16px 0;
+  }
+
+  .checklist li {
+    font-size: 13px;
+    padding: 6px 0;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text);
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .checklist li::before {
+    content: '✓';
+    color: var(--accent3);
+    flex-shrink: 0;
+  }
+
+  /* Footer */
+  footer {
+    border-top: 1px solid var(--border);
+    padding-top: 24px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <span class="tag">Godot 4 · 3D · GDScript · Game Systems</span>
+    <h1>Door & <span>Teleport</span><br>System Documentation</h1>
+    <p class="subtitle">// personal reference · 3D scene navigation & world mapping</p>
+  </header>
+
+  <nav class="toc">
+    <div class="toc-title">Contents</div>
+    <a href="#concept">01 — Core Concept</a>
+    <a href="#door">02 — Door System</a>
+    <a href="#table">03 — Connection Table (Google Sheet)</a>
+    <a href="#door-code">04 — Door Code (Godot)</a>
+    <a href="#teleport">05 — Teleport System</a>
+    <a href="#teleport-table">06 — Teleport Table</a>
+    <a href="#teleport-code">07 — Teleport Code (Godot)</a>
+    <a href="#validator">08 — Validator</a>
+    <a href="#summary">09 — Summary</a>
+  </nav>
+
+  <!-- 01 CONCEPT -->
+  <section id="concept">
+    <h2><span class="num">01</span> Core Concept</h2>
+    <p>Two separate systems handle all scene navigation in the game. They share the same <strong>GameState autoload</strong> for condition checking.</p>
+
+    <div class="flow">
+      <div class="flow-box highlight">Door System</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">Fixed two-way connection<br>between specific points</div>
+    </div>
+    <div class="flow">
+      <div class="flow-box warn">Teleport System</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">One-to-many, triggered by<br>NPC / item / magic circle</div>
+    </div>
+
+    <div class="callout info">
+      <strong>Key Principle</strong>
+      All conditions are read from a single <code>GameState</code> autoload. Never hardcode conditions locally inside scenes. One source of truth for everything.
+    </div>
+  </section>
+
+  <!-- 02 DOOR SYSTEM -->
+  <section id="door">
+    <h2><span class="num">02</span> Door System <span class="badge system">SYSTEM</span></h2>
+    <p>Each row in the connection table represents <strong>one bidirectional connection</strong> between two doors. This prevents missing return doors.</p>
+
+    <h3>// How a door works</h3>
+    <div class="flow">
+      <div class="flow-box">Player touches door_X</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box warn">Check condition_X_Y</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box ok">Load scene_Y</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box highlight">Spawn at door_Y</div>
+    </div>
+
+    <h3>// Door node properties (Inspector)</h3>
+    <p>Each door node in your scene only needs one exported variable — its own <code>door_id</code>. Everything else is looked up from the table at runtime.</p>
+
+    <pre data-lang="GDScript"><code><span class="cm"># Door.gd — attach to each door node (Area3D)</span>
+<span class="kw">extends</span> Area3D
+
+<span class="kw">@export var</span> <span class="var">door_id</span>: String = <span class="str">""</span>
+
+<span class="kw">func</span> <span class="fn">_on_body_entered</span>(body):
+    <span class="kw">if</span> body.is_in_group(<span class="str">"player"</span>):
+        GameState.<span class="fn">enter_door</span>(<span class="var">door_id</span>)</code></pre>
+
+    <div class="callout success">
+      <strong>Friendly to Edit</strong>
+      Adding a new door = drag Door node into scene, set door_id in Inspector. No other code changes needed.
+    </div>
+  </section>
+
+  <!-- 03 CONNECTION TABLE -->
+  <section id="table">
+    <h2><span class="num">03</span> Connection Table <span class="badge table">GOOGLE SHEET</span></h2>
+    <p>Maintain this as a Google Sheet. Use dropdown validation on <code>door_id_x</code> and <code>door_id_y</code> columns to prevent typos. Export as CSV → convert to JSON.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>connection_id</th>
+            <th>door_id_x</th>
+            <th>scene_x</th>
+            <th>door_id_y</th>
+            <th>scene_y</th>
+            <th>condition_x_y</th>
+            <th>condition_y_x</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>001</td>
+            <td class="door-x">town_01_door_A</td>
+            <td>town_01.tscn</td>
+            <td class="door-y">dungeon_01_door_B</td>
+            <td>dungeon_01.tscn</td>
+            <td class="empty">(empty)</td>
+            <td class="empty">(empty)</td>
+          </tr>
+          <tr>
+            <td>002</td>
+            <td class="door-x">town_01_door_C</td>
+            <td>town_01.tscn</td>
+            <td class="door-y">dungeon_02_door_A</td>
+            <td>dungeon_02.tscn</td>
+            <td class="condition">quest_B_done</td>
+            <td class="empty">(empty)</td>
+          </tr>
+          <tr>
+            <td>003</td>
+            <td class="door-x">town_02_door_A</td>
+            <td>town_02.tscn</td>
+            <td class="door-y">dungeon_03_door_A</td>
+            <td>dungeon_03.tscn</td>
+            <td class="condition">key_obtained</td>
+            <td class="condition">key_obtained</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout warning">
+      <strong>Important</strong>
+      Empty condition = always accessible. Both directions can have different conditions — for example X→Y requires a key, but Y→X is always open (player already inside).
+    </div>
+  </section>
+
+  <!-- 04 DOOR CODE -->
+  <section id="door-code">
+    <h2><span class="num">04</span> Door Code — Godot <span class="badge system">SYSTEM</span></h2>
+
+    <h3>// GameState.gd (Autoload)</h3>
+    <pre data-lang="GDScript"><code><span class="kw">extends</span> Node
+
+<span class="kw">var</span> <span class="var">door_database</span> = {}
+<span class="kw">var</span> <span class="var">spawn_door_id</span>: String = <span class="str">""</span>
+
+<span class="cm"># Load door table from JSON on game start</span>
+<span class="kw">func</span> <span class="fn">_ready</span>():
+    <span class="kw">var</span> <span class="var">file</span> = FileAccess.<span class="fn">open</span>(<span class="str">"res://data/doors.json"</span>, FileAccess.READ)
+    <span class="kw">var</span> <span class="var">data</span> = JSON.<span class="fn">parse_string</span>(<span class="var">file</span>.<span class="fn">get_as_text</span>())
+    <span class="kw">for</span> <span class="var">row</span> <span class="kw">in</span> <span class="var">data</span>[<span class="str">"connections"</span>]:
+        <span class="var">door_database</span>[<span class="var">row</span>[<span class="str">"door_id_x"</span>]] = <span class="var">row</span>
+        <span class="var">door_database</span>[<span class="var">row</span>[<span class="str">"door_id_y"</span>]] = <span class="var">row</span>
+
+<span class="cm"># Called when player touches a door</span>
+<span class="kw">func</span> <span class="fn">enter_door</span>(<span class="var">player_door_id</span>: String):
+    <span class="kw">if not</span> <span class="var">door_database</span>.<span class="fn">has</span>(<span class="var">player_door_id</span>):
+        <span class="fn">print</span>(<span class="str">"ERROR: door_id not found → "</span>, <span class="var">player_door_id</span>)
+        <span class="kw">return</span>
+
+    <span class="kw">var</span> <span class="var">row</span> = <span class="var">door_database</span>[<span class="var">player_door_id</span>]
+    <span class="kw">var</span> <span class="var">is_x_side</span> = (<span class="var">player_door_id</span> == <span class="var">row</span>[<span class="str">"door_id_x"</span>])
+
+    <span class="kw">var</span> <span class="var">condition</span> = <span class="var">row</span>[<span class="str">"condition_x_y"</span>] <span class="kw">if</span> <span class="var">is_x_side</span> <span class="kw">else</span> <span class="var">row</span>[<span class="str">"condition_y_x"</span>]
+    <span class="kw">var</span> <span class="var">dest_scene</span> = <span class="var">row</span>[<span class="str">"scene_y"</span>] <span class="kw">if</span> <span class="var">is_x_side</span> <span class="kw">else</span> <span class="var">row</span>[<span class="str">"scene_x"</span>]
+    <span class="kw">var</span> <span class="var">dest_door</span> = <span class="var">row</span>[<span class="str">"door_id_y"</span>] <span class="kw">if</span> <span class="var">is_x_side</span> <span class="kw">else</span> <span class="var">row</span>[<span class="str">"door_id_x"</span>]
+
+    <span class="cm"># Check condition</span>
+    <span class="kw">if</span> <span class="var">condition</span> != <span class="str">""</span> <span class="kw">and not</span> <span class="fn">get</span>(<span class="var">condition</span>):
+        <span class="fn">show_locked_message</span>()
+        <span class="kw">return</span>
+
+    <span class="cm"># Store destination and load scene</span>
+    <span class="var">spawn_door_id</span> = <span class="var">dest_door</span>
+    get_tree().<span class="fn">change_scene_to_file</span>(<span class="str">"res://maps/"</span> + <span class="var">dest_scene</span>)</code></pre>
+
+    <h3>// Spawn player at destination door</h3>
+    <pre data-lang="GDScript"><code><span class="cm"># In each map scene _ready()</span>
+<span class="kw">func</span> <span class="fn">_ready</span>():
+    <span class="kw">var</span> <span class="var">spawn_id</span> = GameState.<span class="var">spawn_door_id</span>
+    <span class="kw">if</span> <span class="var">spawn_id</span> != <span class="str">""</span>:
+        <span class="kw">var</span> <span class="var">door_node</span> = <span class="fn">get_node_or_null</span>(<span class="var">spawn_id</span>)
+        <span class="kw">if</span> <span class="var">door_node</span>:
+            <span class="var">$Player</span>.global_position = <span class="var">door_node</span>.global_position  <span class="cm"># Vector3 in 3D</span></code></pre>
+  </section>
+
+  <!-- 05 TELEPORT SYSTEM -->
+  <section id="teleport">
+    <h2><span class="num">05</span> Teleport System <span class="badge system">SYSTEM</span></h2>
+    <p>Teleport is <strong>one direction only</strong>. Used by guild NPCs, items, or magic circles. One trigger can show a menu of multiple destinations.</p>
+
+    <h3>// How teleport works</h3>
+    <div class="flow">
+      <div class="flow-box">Player talks to Guild NPC</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box highlight">Show available destinations</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box warn">Check condition</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box ok">Load scene → spawn</div>
+    </div>
+
+    <div class="callout info">
+      <strong>Key Difference from Door</strong>
+      Teleport has no "return" row. The return trip is handled by another teleport entry or the door system. Each entry is one direction only.
+    </div>
+  </section>
+
+  <!-- 06 TELEPORT TABLE -->
+  <section id="teleport-table">
+    <h2><span class="num">06</span> Teleport Table <span class="badge table">GOOGLE SHEET</span></h2>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>teleport_id</th>
+            <th>label</th>
+            <th>destination_scene</th>
+            <th>destination_spawn</th>
+            <th>condition</th>
+            <th>teleport_type</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>guild_to_dungeon_01</td>
+            <td>Forest Dungeon</td>
+            <td>dungeon_01.tscn</td>
+            <td class="door-x">dungeon_01_spawn_A</td>
+            <td class="condition">quest_A_done</td>
+            <td>guild</td>
+          </tr>
+          <tr>
+            <td>guild_to_dungeon_02</td>
+            <td>Ice Cave</td>
+            <td>dungeon_02.tscn</td>
+            <td class="door-x">dungeon_02_spawn_A</td>
+            <td class="condition">quest_B_done</td>
+            <td>guild</td>
+          </tr>
+          <tr>
+            <td>item_return_town</td>
+            <td>Return to Town</td>
+            <td>town_01.tscn</td>
+            <td class="door-x">town_01_center</td>
+            <td class="empty">(empty)</td>
+            <td>item</td>
+          </tr>
+          <tr>
+            <td>circle_dungeon_03</td>
+            <td>Ancient Ruins</td>
+            <td>dungeon_03.tscn</td>
+            <td class="door-x">dungeon_03_spawn_A</td>
+            <td class="condition">relic_obtained</td>
+            <td>magic_circle</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 07 TELEPORT CODE -->
+  <section id="teleport-code">
+    <h2><span class="num">07</span> Teleport Code — Godot <span class="badge system">SYSTEM</span></h2>
+
+    <h3>// Load teleport table (in GameState.gd)</h3>
+    <pre data-lang="GDScript"><code><span class="kw">var</span> <span class="var">teleport_database</span> = {}
+
+<span class="kw">func</span> <span class="fn">load_teleports</span>():
+    <span class="kw">var</span> <span class="var">file</span> = FileAccess.<span class="fn">open</span>(<span class="str">"res://data/teleports.json"</span>, FileAccess.READ)
+    <span class="kw">var</span> <span class="var">data</span> = JSON.<span class="fn">parse_string</span>(<span class="var">file</span>.<span class="fn">get_as_text</span>())
+    <span class="kw">for</span> <span class="var">entry</span> <span class="kw">in</span> <span class="var">data</span>[<span class="str">"teleports"</span>]:
+        <span class="var">teleport_database</span>[<span class="var">entry</span>[<span class="str">"teleport_id"</span>]] = <span class="var">entry</span>
+
+<span class="cm"># Get all available teleports for a specific type</span>
+<span class="kw">func</span> <span class="fn">get_available_teleports</span>(<span class="var">type</span>: String) -> Array:
+    <span class="kw">var</span> <span class="var">result</span> = []
+    <span class="kw">for</span> <span class="var">id</span> <span class="kw">in</span> <span class="var">teleport_database</span>:
+        <span class="kw">var</span> <span class="var">entry</span> = <span class="var">teleport_database</span>[<span class="var">id</span>]
+        <span class="kw">if</span> <span class="var">entry</span>[<span class="str">"teleport_type"</span>] == <span class="var">type</span>:
+            <span class="kw">var</span> <span class="var">cond</span> = <span class="var">entry</span>[<span class="str">"condition"</span>]
+            <span class="kw">if</span> <span class="var">cond</span> == <span class="str">""</span> <span class="kw">or</span> <span class="fn">get</span>(<span class="var">cond</span>):
+                <span class="var">result</span>.<span class="fn">append</span>(<span class="var">entry</span>)
+    <span class="kw">return</span> <span class="var">result</span>
+
+<span class="cm"># Execute a teleport</span>
+<span class="kw">func</span> <span class="fn">use_teleport</span>(<span class="var">teleport_id</span>: String):
+    <span class="kw">var</span> <span class="var">entry</span> = <span class="var">teleport_database</span>[<span class="var">teleport_id</span>]
+    <span class="var">spawn_door_id</span> = <span class="var">entry</span>[<span class="str">"destination_spawn"</span>]
+    get_tree().<span class="fn">change_scene_to_file</span>(<span class="str">"res://maps/"</span> + <span class="var">entry</span>[<span class="str">"destination_scene"</span>])</code></pre>
+
+    <h3>// Guild NPC usage example</h3>
+    <pre data-lang="GDScript"><code><span class="cm"># GuildNPC.gd</span>
+<span class="kw">func</span> <span class="fn">talk_to_player</span>():
+    <span class="kw">var</span> <span class="var">options</span> = GameState.<span class="fn">get_available_teleports</span>(<span class="str">"guild"</span>)
+    <span class="cm"># pass options to your dialog/menu system</span>
+    <span class="var">$TeleportMenu</span>.<span class="fn">show_options</span>(<span class="var">options</span>)
+
+<span class="cm"># When player selects a destination</span>
+<span class="kw">func</span> <span class="fn">_on_option_selected</span>(<span class="var">teleport_id</span>: String):
+    GameState.<span class="fn">use_teleport</span>(<span class="var">teleport_id</span>)</code></pre>
+  </section>
+
+  <!-- 08 VALIDATOR -->
+  <section id="validator">
+    <h2><span class="num">08</span> Validator</h2>
+    <p>Run this script to catch missing or broken connections before they become runtime bugs.</p>
+
+    <pre data-lang="GDScript"><code><span class="cm"># Run this in _ready() during development only</span>
+<span class="kw">func</span> <span class="fn">validate_doors</span>():
+    <span class="kw">for</span> <span class="var">door_id</span> <span class="kw">in</span> <span class="var">door_database</span>:
+        <span class="kw">var</span> <span class="var">row</span> = <span class="var">door_database</span>[<span class="var">door_id</span>]
+
+        <span class="cm"># Check destination door exists</span>
+        <span class="kw">var</span> <span class="var">dest</span> = <span class="var">row</span>[<span class="str">"door_id_y"</span>] <span class="kw">if</span> <span class="var">door_id</span> == <span class="var">row</span>[<span class="str">"door_id_x"</span>] <span class="kw">else</span> <span class="var">row</span>[<span class="str">"door_id_x"</span>]
+        <span class="kw">if not</span> <span class="var">door_database</span>.<span class="fn">has</span>(<span class="var">dest</span>):
+            <span class="fn">push_error</span>(<span class="str">"DOOR ERROR: "</span> + <span class="var">door_id</span> + <span class="str">" → destination not found: "</span> + <span class="var">dest</span>)
+
+        <span class="cm"># Check condition variable exists in GameState</span>
+        <span class="kw">for</span> <span class="var">cond_key</span> <span class="kw">in</span> [<span class="str">"condition_x_y"</span>, <span class="str">"condition_y_x"</span>]:
+            <span class="kw">var</span> <span class="var">cond</span> = <span class="var">row</span>[<span class="var">cond_key</span>]
+            <span class="kw">if</span> <span class="var">cond</span> != <span class="str">""</span> <span class="kw">and not</span> (<span class="var">cond</span> <span class="kw">in</span> GameState.<span class="fn">get_property_list</span>().<span class="fn">map</span>(<span class="kw">func</span>(<span class="var">p</span>): <span class="kw">return</span> <span class="var">p</span>[<span class="str">"name"</span>])):
+                <span class="fn">push_warning</span>(<span class="str">"CONDITION WARNING: "</span> + <span class="var">cond</span> + <span class="str">" not found in GameState"</span>)
+
+    <span class="fn">print</span>(<span class="str">"Door validation complete."</span>)</code></pre>
+
+    <div class="callout warning">
+      <strong>Remember</strong>
+      Disable or remove validator calls before shipping. Only run during development.
+    </div>
+  </section>
+
+  <!-- 09 SUMMARY -->
+  <section id="summary">
+    <h2><span class="num">09</span> Summary</h2>
+
+    <ul class="checklist">
+      <li>One <strong>GameState autoload</strong> holds all conditions and spawn data</li>
+      <li>Door table uses <strong>one row per connection</strong> — both directions in one row</li>
+      <li>Each door node only needs its own <strong>door_id</strong> in the Inspector</li>
+      <li>Teleport table is <strong>separate</strong> — one direction, one-to-many destinations</li>
+      <li>Conditions are <strong>empty string</strong> for always open, or <strong>variable name</strong> for locked</li>
+      <li>Validator catches <strong>broken connections</strong> before runtime</li>
+      <li>Both tables editable in <strong>Google Sheet</strong> — export CSV → JSON</li>
+      <li>Spawn player at destination by reading <strong>spawn_door_id</strong> from GameState</li>
+    </ul>
+
+    <div class="callout success">
+      <strong>Foundation Goal</strong>
+      Build and test this system in a small labyrinth puzzle game first. Once solid, reuse unchanged in the dream game — no matter how many dungeons or towns are added.
+    </div>
+  </section>
+
+  <footer>
+    <span>// door-teleport-system · godot 4 · 3d · gdscript</span>
+    <span>personal dev docs · keep for reference</span>
+  </footer>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ledge Shimmy System — Game Dev Docs</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #0d1220;
+    --bg2: #111a2e;
+    --bg3: #172340;
+    --accent: #47aaff;
+    --accent2: #ff6b6b;
+    --accent3: #ffd447;
+    --accent4: #47ffd4;
+    --text: #c8d8f0;
+    --text-dim: #4a6a8a;
+    --border: #1e2d4a;
+    --code-bg: #080d18;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    line-height: 1.7;
+    min-height: 100vh;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(71,170,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(71,170,255,0.025) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+    position: relative;
+    z-index: 1;
+  }
+
+  header {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 32px;
+    margin-bottom: 48px;
+  }
+
+  .tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: block;
+  }
+
+  h1 {
+    font-size: clamp(28px, 5vw, 44px);
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.1;
+    margin-bottom: 16px;
+  }
+
+  h1 span { color: var(--accent); }
+
+  .subtitle {
+    color: var(--text-dim);
+    font-size: 14px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .toc {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    padding: 20px 24px;
+    margin-bottom: 48px;
+    border-radius: 2px;
+  }
+
+  .toc-title {
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--accent);
+    font-family: 'JetBrains Mono', monospace;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+  }
+
+  .toc a {
+    display: block;
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 13px;
+    padding: 3px 0;
+    font-family: 'JetBrains Mono', monospace;
+    transition: color 0.2s;
+  }
+
+  .toc a:hover { color: var(--accent); }
+  .toc a::before { content: '→ '; color: var(--accent); }
+
+  section { margin-bottom: 56px; }
+
+  h2 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  h2 .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+    background: rgba(71,170,255,0.08);
+    padding: 2px 8px;
+    border: 1px solid rgba(71,170,255,0.2);
+  }
+
+  h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--accent3);
+    margin: 24px 0 10px;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 1px;
+  }
+
+  p {
+    font-size: 14px;
+    color: var(--text);
+    margin-bottom: 14px;
+  }
+
+  .callout {
+    padding: 16px 20px;
+    margin: 20px 0;
+    border-radius: 2px;
+    font-size: 13px;
+    border-left: 3px solid;
+  }
+
+  .callout.info { background: rgba(71,170,255,0.05); border-color: var(--accent); }
+  .callout.warning { background: rgba(255,107,107,0.06); border-color: var(--accent2); }
+  .callout.tip { background: rgba(255,212,71,0.06); border-color: var(--accent3); }
+  .callout.blue { background: rgba(71,255,212,0.06); border-color: var(--accent4); }
+
+  .callout strong {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .callout.info strong { color: var(--accent); }
+  .callout.warning strong { color: var(--accent2); }
+  .callout.tip strong { color: var(--accent3); }
+  .callout.blue strong { color: var(--accent4); }
+
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 20px;
+    overflow-x: auto;
+    margin: 16px 0;
+    position: relative;
+  }
+
+  pre::before {
+    content: attr(data-lang);
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+  }
+
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.9;
+    color: var(--text);
+  }
+
+  .kw { color: #c792ea; }
+  .fn { color: #82aaff; }
+  .str { color: #c3e88d; }
+  .cm { color: #3d5c42; font-style: italic; }
+  .nm { color: #f78c6c; }
+  .vr { color: var(--accent); }
+  .sg { color: var(--accent3); }
+  .bl { color: var(--accent2); }
+
+  .table-wrap {
+    overflow-x: auto;
+    margin: 16px 0;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  th {
+    background: var(--bg3);
+    color: var(--accent);
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: top;
+  }
+
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+
+  td.yes { color: var(--accent); }
+  td.no { color: var(--accent2); }
+  td.opt { color: var(--accent3); }
+
+  .checklist { list-style: none; margin: 16px 0; }
+
+  .checklist li {
+    font-size: 13px;
+    padding: 6px 0;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text);
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .checklist li::before { content: '✓'; color: var(--accent); flex-shrink: 0; }
+
+  .badge {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 2px;
+    letter-spacing: 1px;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+
+  .badge.system { background: rgba(71,170,255,0.1); color: var(--accent); border: 1px solid rgba(71,170,255,0.2); }
+  .badge.toggle { background: rgba(255,212,71,0.1); color: var(--accent3); border: 1px solid rgba(255,212,71,0.2); }
+  .badge.reuse { background: rgba(71,255,212,0.1); color: var(--accent4); border: 1px solid rgba(71,255,212,0.2); }
+
+  .states { display: flex; flex-direction: column; gap: 2px; margin: 16px 0; }
+
+  .state-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    padding: 8px 14px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+  }
+
+  .state-name { min-width: 130px; color: var(--accent3); font-weight: 600; }
+  .state-arrow { color: var(--text-dim); }
+  .state-desc { color: var(--text); }
+  .state-trigger { color: var(--accent4); font-size: 11px; margin-left: auto; }
+
+  /* Diagram cards */
+  .cases { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 20px 0; }
+  @media (max-width: 720px) { .cases { grid-template-columns: 1fr; } }
+
+  .case {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 18px;
+  }
+  .case.full { grid-column: 1 / -1; }
+
+  .case-head {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .case-num {
+    font-size: 10px;
+    padding: 1px 6px;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    color: var(--text-dim);
+  }
+  .case-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-bottom: 12px;
+  }
+  .case svg { width: 100%; height: auto; display: block; }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin: 16px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend .sw { width: 14px; height: 14px; border-radius: 2px; display: inline-block; }
+
+  footer {
+    border-top: 1px solid var(--border);
+    padding-top: 24px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <span class="tag">Godot 4 · 3D · GDScript · Game Systems</span>
+    <h1><span>Ledge Shimmy</span><br>System Concept</h1>
+    <p class="subtitle">// personal reference · hang &amp; climb sideways · Tomb Raider style · corner handling</p>
+  </header>
+
+  <nav class="toc">
+    <div class="toc-title">Contents</div>
+    <a href="#concept">01 — What is Ledge Shimmy</a>
+    <a href="#probes">02 — The Two Core Probes</a>
+    <a href="#cases">03 — The Five Cases (visual)</a>
+    <a href="#corners">04 — Corners: Inner vs Outer</a>
+    <a href="#disambig">05 — Disambiguation (tricky pairs)</a>
+    <a href="#rays">06 — Ray Inventory (count + direction)</a>
+    <a href="#diagonal">07 — Diagonal Ledges</a>
+    <a href="#truthtable">08 — Decision Truth Table</a>
+    <a href="#states">09 — Outcomes &amp; Animation</a>
+    <a href="#tips">10 — Implementation Notes</a>
+  </nav>
+
+  <!-- 01 CONCEPT -->
+  <section id="concept">
+    <h2><span class="num">01</span> What is Ledge Shimmy</h2>
+    <p>After the player climbs up and grabs a ledge, they hang from it and can move sideways — left or right — hand over hand along the edge. This is the classic Tomb Raider / Uncharted "shimmy". The hard part is not the sideways movement itself; it is deciding, every step, <em>whether the player can keep going</em> and <em>what happens when the ledge changes shape</em>.</p>
+
+    <div class="callout info">
+      <strong>Core Idea</strong>
+      Every frame you shimmy, cast probes ahead of the leading hand and ask two yes/no questions: is there still a <em>wall</em> to hug, and is there still a <em>ledge</em> to grip? The combination of those two answers — plus a corner check — selects the outcome.
+    </div>
+
+    <div class="callout blue">
+      <strong>Reuses What You Built</strong>
+      This is the same "probe → measure → decide" pattern as the stair step-up. The down-cast that keeps you gripping the edge as you slide is the same idea as the stair snap re-finding the floor each frame.
+    </div>
+  </section>
+
+  <!-- 02 PROBES -->
+  <section id="probes">
+    <h2><span class="num">02</span> The Two Core Probes</h2>
+    <p>Both probes are offset sideways in the shimmy direction — they ask "what is at the spot I am about to move into", not "where I am now".</p>
+
+    <div class="states">
+      <div class="state-row">
+        <span class="state-name">WALL probe</span>
+        <span class="state-arrow">→</span>
+        <span class="state-desc">ray forward (into wall), offset sideways</span>
+        <span class="state-trigger">"is there wall to hug?"</span>
+      </div>
+      <div class="state-row">
+        <span class="state-name">LEDGE probe</span>
+        <span class="state-arrow">→</span>
+        <span class="state-desc">ray down from above, offset sideways + forward</span>
+        <span class="state-trigger">"is there a top edge to grip?"</span>
+      </div>
+    </div>
+
+    <div class="legend">
+      <span><span class="sw" style="background:#47aaff"></span> wall probe</span>
+      <span><span class="sw" style="background:#ffd447"></span> ledge probe</span>
+      <span><span class="sw" style="background:#47ffd4"></span> corner probe</span>
+      <span><span class="sw" style="background:#ff6b6b"></span> blocked / no hit</span>
+      <span><span class="sw" style="background:#7a8aa0"></span> solid geometry</span>
+    </div>
+
+    <p class="subtitle">// All diagrams below are <strong>top-down</strong> views. Grey = solid wall the player hangs on. The dot is the player; the arrow is the shimmy direction (right).</p>
+  </section>
+
+  <!-- 03 CASES -->
+  <section id="cases">
+    <h2><span class="num">03</span> The Five Cases</h2>
+    <p>These are the situations the leading hand can run into while shimmying right. Each maps to one outcome.</p>
+
+    <div class="cases">
+
+      <!-- CASE 1: NORMAL -->
+      <div class="case">
+        <div class="case-head" style="color:var(--accent4)"><span class="case-num">01</span> NORMAL — keep going</div>
+        <div class="case-sub">wall = YES &nbsp; ledge = YES</div>
+        <svg viewBox="0 0 300 160" xmlns="http://www.w3.org/2000/svg">
+          <!-- wall -->
+          <rect x="0" y="0" width="300" height="55" fill="#2a3450" stroke="#7a8aa0" stroke-width="1"/>
+          <line x1="0" y1="55" x2="300" y2="55" stroke="#9fb0c8" stroke-width="2"/>
+          <text x="150" y="30" fill="#5a6a82" font-family="monospace" font-size="10" text-anchor="middle">SOLID WALL (ledge edge continues)</text>
+          <!-- player -->
+          <circle cx="120" cy="80" r="9" fill="#fff"/>
+          <text x="120" y="105" fill="#c8d8f0" font-family="monospace" font-size="9" text-anchor="middle">player</text>
+          <!-- shimmy arrow -->
+          <line x1="135" y1="80" x2="180" y2="80" stroke="#c8d8f0" stroke-width="1.5"/>
+          <polygon points="180,80 172,76 172,84" fill="#c8d8f0"/>
+          <!-- wall probe (hits) -->
+          <line x1="190" y1="80" x2="190" y2="56" stroke="#47aaff" stroke-width="2"/>
+          <circle cx="190" cy="56" r="3" fill="#47aaff"/>
+          <!-- ledge probe (hits) -->
+          <line x1="205" y1="40" x2="205" y2="56" stroke="#ffd447" stroke-width="2"/>
+          <circle cx="205" cy="56" r="3" fill="#ffd447"/>
+          <text x="225" y="130" fill="#47ffd4" font-family="monospace" font-size="9" text-anchor="middle">both hit ✓</text>
+        </svg>
+      </div>
+
+      <!-- CASE 2: WALL BLOCKS -->
+      <div class="case">
+        <div class="case-head" style="color:var(--accent2)"><span class="case-num">02</span> WALL BLOCKS — stop</div>
+        <div class="case-sub">wall = YES (jutting out) &nbsp; ledge = YES but no room</div>
+        <svg viewBox="0 0 300 160" xmlns="http://www.w3.org/2000/svg">
+          <rect x="0" y="0" width="175" height="55" fill="#2a3450" stroke="#7a8aa0" stroke-width="1"/>
+          <line x1="0" y1="55" x2="175" y2="55" stroke="#9fb0c8" stroke-width="2"/>
+          <!-- blocking wall juts toward player -->
+          <rect x="175" y="0" width="50" height="120" fill="#2a3450" stroke="#7a8aa0" stroke-width="1"/>
+          <line x1="175" y1="55" x2="175" y2="120" stroke="#9fb0c8" stroke-width="2"/>
+          <text x="200" y="80" fill="#5a6a82" font-family="monospace" font-size="9" text-anchor="middle" transform="rotate(90 200 80)">BLOCK</text>
+          <circle cx="120" cy="80" r="9" fill="#fff"/>
+          <line x1="135" y1="80" x2="165" y2="80" stroke="#c8d8f0" stroke-width="1.5"/>
+          <polygon points="165,80 157,76 157,84" fill="#c8d8f0"/>
+          <!-- probe hits the jutting block -->
+          <line x1="150" y1="80" x2="174" y2="80" stroke="#ff6b6b" stroke-width="2"/>
+          <circle cx="174" cy="80" r="3" fill="#ff6b6b"/>
+          <text x="240" y="140" fill="#ff6b6b" font-family="monospace" font-size="9" text-anchor="middle">side blocked ✗</text>
+        </svg>
+      </div>
+
+      <!-- CASE 3: CUT / GAP -->
+      <div class="case">
+        <div class="case-head" style="color:var(--accent2)"><span class="case-num">03</span> CUT — gap, stop</div>
+        <div class="case-sub">wall = YES &nbsp; ledge = NO (edge ended)</div>
+        <svg viewBox="0 0 300 160" xmlns="http://www.w3.org/2000/svg">
+          <!-- wall persists but ledge edge ends -->
+          <rect x="0" y="0" width="175" height="55" fill="#2a3450" stroke="#7a8aa0" stroke-width="1"/>
+          <line x1="0" y1="55" x2="175" y2="55" stroke="#9fb0c8" stroke-width="2"/>
+          <!-- wall continues flat (no grabbable top) -->
+          <rect x="175" y="0" width="125" height="55" fill="#1a2236" stroke="#3a4860" stroke-width="1" stroke-dasharray="4 3"/>
+          <text x="237" y="32" fill="#5a6a82" font-family="monospace" font-size="9" text-anchor="middle">no top edge</text>
+          <circle cx="120" cy="80" r="9" fill="#fff"/>
+          <line x1="135" y1="80" x2="180" y2="80" stroke="#c8d8f0" stroke-width="1.5"/>
+          <polygon points="180,80 172,76 172,84" fill="#c8d8f0"/>
+          <!-- wall probe still hits -->
+          <line x1="190" y1="80" x2="190" y2="56" stroke="#47aaff" stroke-width="2"/>
+          <circle cx="190" cy="56" r="3" fill="#47aaff"/>
+          <!-- ledge probe misses -->
+          <line x1="205" y1="40" x2="205" y2="72" stroke="#ff6b6b" stroke-width="2" stroke-dasharray="3 3"/>
+          <text x="205" y="86" fill="#ff6b6b" font-family="monospace" font-size="14" text-anchor="middle">✗</text>
+          <text x="225" y="130" fill="#ff6b6b" font-family="monospace" font-size="9" text-anchor="middle">ledge gone ✗</text>
+        </svg>
+      </div>
+
+      <!-- CASE 4: INNER CORNER (square hole) -->
+      <div class="case">
+        <div class="case-head" style="color:var(--accent3)"><span class="case-num">04</span> INNER — square HOLE</div>
+        <div class="case-sub">wall = YES &nbsp; ledge = NO ahead &nbsp; → turns into corner</div>
+        <svg viewBox="0 0 300 170" xmlns="http://www.w3.org/2000/svg">
+          <!-- solid surrounds a hole; hole is the dark gap -->
+          <rect x="0" y="0" width="300" height="170" fill="#2a3450" stroke="#7a8aa0" stroke-width="1"/>
+          <!-- the hole (open space) -->
+          <rect x="60" y="55" width="180" height="115" fill="#080d18"/>
+          <!-- grabbable inner edges of the hole -->
+          <line x1="60" y1="55" x2="240" y2="55" stroke="#9fb0c8" stroke-width="2"/>
+          <line x1="240" y1="55" x2="240" y2="170" stroke="#9fb0c8" stroke-width="2"/>
+          <line x1="60" y1="55" x2="60" y2="170" stroke="#9fb0c8" stroke-width="2"/>
+          <text x="150" y="30" fill="#5a6a82" font-family="monospace" font-size="9" text-anchor="middle">SOLID (hole cut into it)</text>
+          <!-- player hanging on inner top edge -->
+          <circle cx="130" cy="78" r="9" fill="#fff"/>
+          <line x1="145" y1="78" x2="205" y2="78" stroke="#c8d8f0" stroke-width="1.5"/>
+          <polygon points="205,78 197,74 197,82" fill="#c8d8f0"/>
+          <!-- wall probe: straight ahead still hits solid (corner is solid) -->
+          <line x1="210" y1="78" x2="239" y2="78" stroke="#47aaff" stroke-width="2"/>
+          <circle cx="239" cy="78" r="3" fill="#47aaff"/>
+          <text x="222" y="98" fill="#47aaff" font-family="monospace" font-size="9" text-anchor="middle">wall ✓</text>
+          <!-- corner probe: forward to corner then DOWN along the right inner face -->
+          <line x1="225" y1="65" x2="225" y2="56" stroke="#47ffd4" stroke-width="2"/>
+          <line x1="225" y1="56" x2="239" y2="90" stroke="#47ffd4" stroke-width="2"/>
+          <circle cx="239" cy="90" r="3" fill="#47ffd4"/>
+          <text x="150" y="150" fill="#47ffd4" font-family="monospace" font-size="9" text-anchor="middle">edge turns down → rotate in</text>
+        </svg>
+      </div>
+
+      <!-- CASE 5: OUTER CORNER (square box) -->
+      <div class="case full">
+        <div class="case-head" style="color:var(--accent3)"><span class="case-num">05</span> OUTER CORNER — square BOX (wrap around outside, 270°)</div>
+        <div class="case-sub">wall = NO straight ahead (face ended) &nbsp; → block's next outer face found, wrap around</div>
+        <svg viewBox="0 0 600 180" xmlns="http://www.w3.org/2000/svg">
+          <!-- freestanding square block; open air all around -->
+          <rect x="140" y="40" width="180" height="140" fill="#2a3450" stroke="#7a8aa0" stroke-width="1"/>
+          <!-- grabbable outer edges -->
+          <line x1="140" y1="40" x2="320" y2="40" stroke="#9fb0c8" stroke-width="2"/>
+          <line x1="320" y1="40" x2="320" y2="180" stroke="#9fb0c8" stroke-width="2"/>
+          <text x="230" y="115" fill="#5a6a82" font-family="monospace" font-size="11" text-anchor="middle">SOLID BLOCK</text>
+          <text x="230" y="132" fill="#5a6a82" font-family="monospace" font-size="9" text-anchor="middle">(freestanding)</text>
+          <text x="70" y="100" fill="#3a4860" font-family="monospace" font-size="9" text-anchor="middle">open air</text>
+          <!-- player hanging on top outer face, shimmying right toward corner -->
+          <circle cx="210" cy="62" r="9" fill="#fff"/>
+          <line x1="225" y1="62" x2="290" y2="62" stroke="#c8d8f0" stroke-width="1.5"/>
+          <polygon points="290,62 282,58 282,66" fill="#c8d8f0"/>
+          <!-- wall probe straight ahead MISSES (face ends at the corner) -->
+          <line x1="300" y1="62" x2="335" y2="62" stroke="#ff6b6b" stroke-width="2" stroke-dasharray="3 3"/>
+          <text x="345" y="58" fill="#ff6b6b" font-family="monospace" font-size="11" text-anchor="start">✗ face ended here</text>
+          <!-- corner probe: sideways past the corner, then forward back onto the new face -->
+          <line x1="320" y1="78" x2="350" y2="78" stroke="#47ffd4" stroke-width="2"/>
+          <line x1="350" y1="78" x2="321" y2="78" stroke="#47ffd4" stroke-width="2"/>
+          <circle cx="321" cy="78" r="3" fill="#47ffd4"/>
+          <text x="460" y="150" fill="#47ffd4" font-family="monospace" font-size="10" text-anchor="middle">new outer face found → wrap around corner</text>
+        </svg>
+      </div>
+
+    </div>
+
+    <div class="callout warning">
+      <strong>Cases 2 &amp; 3 Both = "Stop"</strong>
+      From the player's view they feel different (blocked by a side wall vs reaching a gap), but mechanically both end the shimmy in that direction. You can give them the same "reach and stop" animation, or two different ones for polish.
+    </div>
+  </section>
+
+  <!-- 04 CORNERS -->
+  <section id="corners">
+    <h2><span class="num">04</span> Corners: Inner vs Outer</h2>
+    <p>The corners are the only cases that need a <strong>second probe in sequence</strong>. A single ray cannot see "around a corner" — you cast once to the edge, then cast again from that new point in a perpendicular direction.</p>
+
+    <h3>// Case 4 — Inner corner (concave · inside a square HOLE)</h3>
+    <p>The player hangs <em>inside</em> a hole cut into the wall. Shimmying along one inner face, they reach the inside corner of the hole, and the edge turns to follow the perpendicular inner face. The wall stays continuous (it wraps the inside of the hole), so straight ahead reads <strong>wall = YES</strong>, but the ledge no longer continues straight. Cast forward into the corner, then sideways along the new inner face. The player rotates <em>into</em> the corner and keeps shimmying.</p>
+
+    <h3>// Case 5 — Outer corner (convex · around a square BOX)</h3>
+    <p>The player hangs on the <em>outside</em> of a freestanding block. Shimmying along one face, they reach the block's corner — the face simply <strong>ends</strong>, so straight ahead reads <strong>wall = NO</strong>. Cast sideways past where the face stopped, then forward; you find the block's next outer face. The player wraps <em>around</em> the outside corner onto that adjacent face.</p>
+
+    <div class="callout tip">
+      <strong>Probe Order Matters</strong>
+      Inner/hole (case 4) = forward-then-sideways. Outer/box (case 5) = sideways-then-forward. Mixing them up is the #1 reason a corner system "sometimes turns the wrong way".
+    </div>
+  </section>
+
+  <!-- 05 DISAMBIGUATION -->
+  <section id="disambig">
+    <h2><span class="num">05</span> Disambiguation — the tricky pairs</h2>
+    <p>Some cases give the <strong>same reading on the two core probes</strong>, so the core probes alone cannot tell them apart. A second probe (the corner check) is what actually picks within each pair. This is the single most important part to get right — a system that skips the second probe will "sometimes turn, sometimes stop" because it is guessing on insufficient information.</p>
+
+    <div class="callout warning">
+      <strong>Key Realisation</strong>
+      The core probes narrow the situation down to a <em>pair</em>. The corner / side probe is what resolves <em>which</em> of the pair it actually is.
+    </div>
+
+    <h3>// Fork A — Case 3 (cut) vs Case 4 (inner / hole)</h3>
+    <p>Both read <strong>wall = YES, ledge = NO</strong> straight ahead. Identical on the core probes. The tie-breaker is the <strong>inner corner probe</strong>: cast forward into the corner, then sideways along the new perpendicular inner face, then down to look for a ledge top there.</p>
+    <ul class="checklist">
+      <li>Inner probe <strong>finds a ledge</strong> on the perpendicular face → <span style="color:var(--accent3)">CASE 4</span> (turn into corner).</li>
+      <li>Inner probe finds <strong>nothing</strong> (flat wall continues, or open air) → <span style="color:var(--accent2)">CASE 3</span> (real cut, stop).</li>
+    </ul>
+
+    <div class="case full" style="margin:16px 0;">
+      <div class="case-head" style="color:var(--text)">FORK A &nbsp; wall=YES, ledge=NO &nbsp; → run inner corner probe</div>
+      <div class="case-sub">left: probe finds ledge on side face (CASE 4) &nbsp;·&nbsp; right: probe finds nothing (CASE 3)</div>
+      <svg viewBox="0 0 600 180" xmlns="http://www.w3.org/2000/svg">
+        <!-- LEFT: case 4 -->
+        <rect x="10" y="20" width="270" height="140" fill="#2a3450" stroke="#7a8aa0" stroke-width="1"/>
+        <rect x="70" y="60" width="210" height="100" fill="#080d18"/>
+        <line x1="70" y1="60" x2="280" y2="60" stroke="#9fb0c8" stroke-width="2"/>
+        <line x1="70" y1="60" x2="70" y2="160" stroke="#9fb0c8" stroke-width="2"/>
+        <circle cx="130" cy="82" r="8" fill="#fff"/>
+        <line x1="143" y1="82" x2="190" y2="82" stroke="#c8d8f0" stroke-width="1.5"/>
+        <polygon points="190,82 183,79 183,85" fill="#c8d8f0"/>
+        <!-- wall probe hits -->
+        <line x1="195" y1="82" x2="230" y2="82" stroke="#47aaff" stroke-width="2"/>
+        <circle cx="230" cy="82" r="3" fill="#47aaff"/>
+        <!-- inner corner probe: fwd then sideways then finds ledge edge going down -->
+        <line x1="215" y1="70" x2="215" y2="61" stroke="#47ffd4" stroke-width="2"/>
+        <line x1="215" y1="61" x2="248" y2="61" stroke="#47ffd4" stroke-width="2"/>
+        <circle cx="248" cy="61" r="3" fill="#47ffd4"/>
+        <text x="145" y="145" fill="#47ffd4" font-family="monospace" font-size="9" text-anchor="middle">ledge found → CASE 4</text>
+        <text x="145" y="40" fill="#5a6a82" font-family="monospace" font-size="9" text-anchor="middle">HOLE</text>
+
+        <!-- divider -->
+        <line x1="300" y1="20" x2="300" y2="160" stroke="#1e2d4a" stroke-width="1" stroke-dasharray="4 4"/>
+
+        <!-- RIGHT: case 3 -->
+        <rect x="320" y="20" width="120" height="50" fill="#2a3450" stroke="#7a8aa0" stroke-width="1"/>
+        <line x1="320" y1="70" x2="440" y2="70" stroke="#9fb0c8" stroke-width="2"/>
+        <rect x="440" y="20" width="150" height="50" fill="#1a2236" stroke="#3a4860" stroke-width="1" stroke-dasharray="4 3"/>
+        <text x="515" y="48" fill="#5a6a82" font-family="monospace" font-size="9" text-anchor="middle">no top edge</text>
+        <circle cx="380" cy="95" r="8" fill="#fff"/>
+        <line x1="393" y1="95" x2="438" y2="95" stroke="#c8d8f0" stroke-width="1.5"/>
+        <polygon points="438,95 431,92 431,98" fill="#c8d8f0"/>
+        <!-- wall probe hits -->
+        <line x1="443" y1="95" x2="443" y2="71" stroke="#47aaff" stroke-width="2"/>
+        <circle cx="443" cy="71" r="3" fill="#47aaff"/>
+        <!-- inner probe finds nothing -->
+        <line x1="460" y1="84" x2="460" y2="60" stroke="#ff6b6b" stroke-width="2" stroke-dasharray="3 3"/>
+        <line x1="460" y1="60" x2="495" y2="60" stroke="#ff6b6b" stroke-width="2" stroke-dasharray="3 3"/>
+        <text x="500" y="58" fill="#ff6b6b" font-family="monospace" font-size="11">✗</text>
+        <text x="455" y="135" fill="#ff6b6b" font-family="monospace" font-size="9" text-anchor="middle">nothing → CASE 3</text>
+      </svg>
+    </div>
+
+    <h3>// Fork B — Case 2 (wall blocks) vs Case 5 (outer / box) vs dead-end</h3>
+    <p>Here the first thing to test is whether your <strong>sideways path</strong> is physically blocked. That single side probe separates Case 2 from everything else before the core probes even run.</p>
+    <ul class="checklist">
+      <li>Side probe (body height, sideways) <strong>hits solid</strong> → <span style="color:var(--accent2)">CASE 2</span> (a wall is in the way, stop).</li>
+      <li>Side path <strong>clear</strong> + wall ahead gone + outer probe <strong>finds a new face</strong> → <span style="color:var(--accent3)">CASE 5</span> (wrap around box).</li>
+      <li>Side path clear + outer probe finds <strong>nothing</strong> → <span style="color:var(--accent2)">DEAD END</span> (ledge just ends in open air).</li>
+    </ul>
+
+    <div class="case full" style="margin:16px 0;">
+      <div class="case-head" style="color:var(--text)">FORK B &nbsp; → run side probe first, then outer corner probe</div>
+      <div class="case-sub">left: side path blocked (CASE 2) &nbsp;·&nbsp; right: side clear, outer face found (CASE 5)</div>
+      <svg viewBox="0 0 600 180" xmlns="http://www.w3.org/2000/svg">
+        <!-- LEFT: case 2 - side blocked -->
+        <rect x="10" y="20" width="150" height="50" fill="#2a3450" stroke="#7a8aa0" stroke-width="1"/>
+        <line x1="10" y1="70" x2="160" y2="70" stroke="#9fb0c8" stroke-width="2"/>
+        <rect x="160" y="20" width="45" height="120" fill="#2a3450" stroke="#7a8aa0" stroke-width="1"/>
+        <line x1="160" y1="70" x2="160" y2="140" stroke="#9fb0c8" stroke-width="2"/>
+        <text x="182" y="95" fill="#5a6a82" font-family="monospace" font-size="8" text-anchor="middle" transform="rotate(90 182 95)">BLOCK</text>
+        <circle cx="110" cy="95" r="8" fill="#fff"/>
+        <!-- side probe hits the block -->
+        <line x1="122" y1="95" x2="159" y2="95" stroke="#ff6b6b" stroke-width="2"/>
+        <circle cx="159" cy="95" r="3" fill="#ff6b6b"/>
+        <text x="100" y="150" fill="#ff6b6b" font-family="monospace" font-size="9" text-anchor="middle">side blocked → CASE 2</text>
+
+        <!-- divider -->
+        <line x1="300" y1="20" x2="300" y2="160" stroke="#1e2d4a" stroke-width="1" stroke-dasharray="4 4"/>
+
+        <!-- RIGHT: case 5 - box outer -->
+        <rect x="360" y="40" width="160" height="120" fill="#2a3450" stroke="#7a8aa0" stroke-width="1"/>
+        <line x1="360" y1="40" x2="520" y2="40" stroke="#9fb0c8" stroke-width="2"/>
+        <line x1="520" y1="40" x2="520" y2="160" stroke="#9fb0c8" stroke-width="2"/>
+        <text x="440" y="105" fill="#5a6a82" font-family="monospace" font-size="9" text-anchor="middle">BOX</text>
+        <text x="335" y="100" fill="#3a4860" font-family="monospace" font-size="8" text-anchor="middle">air</text>
+        <circle cx="420" cy="62" r="8" fill="#fff"/>
+        <line x1="433" y1="62" x2="495" y2="62" stroke="#c8d8f0" stroke-width="1.5"/>
+        <polygon points="495,62 488,59 488,65" fill="#c8d8f0"/>
+        <!-- side path clear (no hit) -->
+        <line x1="520" y1="62" x2="545" y2="62" stroke="#ff6b6b" stroke-width="2" stroke-dasharray="3 3"/>
+        <text x="556" y="58" fill="#ff6b6b" font-family="monospace" font-size="9">face ends</text>
+        <!-- outer corner probe: sideways then forward back onto new face -->
+        <line x1="520" y1="80" x2="548" y2="80" stroke="#47ffd4" stroke-width="2"/>
+        <line x1="548" y1="80" x2="521" y2="80" stroke="#47ffd4" stroke-width="2"/>
+        <circle cx="521" cy="80" r="3" fill="#47ffd4"/>
+        <text x="450" y="150" fill="#47ffd4" font-family="monospace" font-size="9" text-anchor="middle">new face → CASE 5</text>
+      </svg>
+    </div>
+  </section>
+
+  <!-- 06 RAY INVENTORY -->
+  <section id="rays">
+    <h2><span class="num">06</span> Ray Inventory — how many, where, why</h2>
+    <p>You need <strong>5 ray casts total</strong> to handle all cases, but they are not all fired every frame. Three run every shimmy step; the corner pair only fires to break a tie. Directions assume shimmying <strong>right</strong> — mirror the sideways offset for left.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>#</th><th>ray name</th><th>origin</th><th>direction</th><th>fires</th><th>answers</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td><td class="opt">SIDE</td>
+            <td>chest height</td>
+            <td>sideways (+right), length ≈ 1 step</td>
+            <td class="yes">every step</td>
+            <td>is my sideways path blocked? (Case 2)</td>
+          </tr>
+          <tr>
+            <td>2</td><td class="opt">WALL</td>
+            <td>chest, offset sideways 1 step</td>
+            <td>forward (into wall)</td>
+            <td class="yes">every step</td>
+            <td>is there still wall to hug?</td>
+          </tr>
+          <tr>
+            <td>3</td><td class="opt">LEDGE</td>
+            <td>above head, offset sideways 1 step + forward</td>
+            <td>down</td>
+            <td class="yes">every step</td>
+            <td>is there still a top edge to grip?</td>
+          </tr>
+          <tr>
+            <td>4a</td><td class="opt">INNER-A</td>
+            <td>chest, offset sideways 1 step</td>
+            <td>forward (into corner)</td>
+            <td class="opt">only if wall=YES, ledge=NO</td>
+            <td rowspan="2">does the ledge turn INTO the corner? (Case 4 vs 3)</td>
+          </tr>
+          <tr>
+            <td>4b</td><td class="opt">INNER-B</td>
+            <td>from 4a hit point</td>
+            <td>sideways then down</td>
+            <td class="opt">only if 4a hits</td>
+          </tr>
+          <tr>
+            <td>5a</td><td class="opt">OUTER-A</td>
+            <td>chest, past where face ended</td>
+            <td>sideways (+right)</td>
+            <td class="opt">only if wall=NO</td>
+            <td rowspan="2">does a new outer face exist? (Case 5 vs dead-end)</td>
+          </tr>
+          <tr>
+            <td>5b</td><td class="opt">OUTER-B</td>
+            <td>from 5a end point</td>
+            <td>forward (back toward block)</td>
+            <td class="opt">only if side path clear</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout info">
+      <strong>Count Summary</strong>
+      3 rays always (SIDE, WALL, LEDGE). The inner check adds 2 (INNER-A + INNER-B). The outer check adds 2 (OUTER-A + OUTER-B). Because inner and outer checks are mutually exclusive (one needs wall=YES, the other wall=NO), the worst case in any single frame is <strong>5 rays</strong>, never 7.
+    </div>
+
+    <div class="callout tip">
+      <strong>Why corners take 2 rays each</strong>
+      A single ray travels in a straight line and cannot "see around" a corner. The first ray reaches the edge; the second fires perpendicular from that point to test what continues around it. Inner = forward-then-sideways/down. Outer = sideways-then-forward.
+    </div>
+
+    <pre data-lang="GDScript · pseudocode"><code><span class="kw">func</span> <span class="fn">classify_shimmy</span>(<span class="vr">dir</span>):
+    <span class="cm"># --- 3 core rays, every step ---</span>
+    <span class="kw">if</span> <span class="fn">side_probe</span>(<span class="vr">dir</span>):              <span class="cm"># ray 1</span>
+        <span class="kw">return</span> <span class="bl">CASE_2_WALL_BLOCKS</span>       <span class="cm"># side path blocked</span>
+
+    <span class="kw">var</span> <span class="vr">wall</span>  = <span class="fn">wall_probe</span>(<span class="vr">dir</span>)      <span class="cm"># ray 2</span>
+    <span class="kw">var</span> <span class="vr">ledge</span> = <span class="fn">ledge_probe</span>(<span class="vr">dir</span>)     <span class="cm"># ray 3</span>
+
+    <span class="kw">if</span> <span class="vr">wall</span> <span class="kw">and</span> <span class="vr">ledge</span>:
+        <span class="kw">return</span> <span class="sg">CASE_1_CONTINUE</span>
+
+    <span class="cm"># --- wall ahead, no ledge: cut OR inner corner (rays 4a, 4b) ---</span>
+    <span class="kw">if</span> <span class="vr">wall</span> <span class="kw">and</span> <span class="kw">not</span> <span class="vr">ledge</span>:
+        <span class="kw">if</span> <span class="fn">inner_corner_probe</span>(<span class="vr">dir</span>):
+            <span class="kw">return</span> <span class="sg">CASE_4_INNER</span>         <span class="cm"># hole</span>
+        <span class="kw">return</span> <span class="bl">CASE_3_CUT</span>
+
+    <span class="cm"># --- no wall ahead: outer corner OR dead end (rays 5a, 5b) ---</span>
+    <span class="kw">if</span> <span class="fn">outer_corner_probe</span>(<span class="vr">dir</span>):
+        <span class="kw">return</span> <span class="sg">CASE_5_OUTER</span>             <span class="cm"># box</span>
+    <span class="kw">return</span> <span class="bl">DEAD_END</span></code></pre>
+  </section>
+
+  <!-- 07 DIAGONAL -->
+  <section id="diagonal">
+    <h2><span class="num">07</span> Diagonal Ledges <span class="badge toggle">SWITCHABLE</span></h2>
+    <p>Real ledges are rarely perfectly level — they drift up or down a little as you shimmy. We do <strong>not</strong> need a new ray for this. The down-facing <strong>LEDGE probe (ray 3)</strong> already reports the <em>height</em> of the edge ahead. Comparing that height to the player's current grip height tells us the slope of the next step.</p>
+
+    <div class="callout info">
+      <strong>Core Idea</strong>
+      The LEDGE probe's hit Y is reused for two jobs: (1) presence — is there an edge at all; (2) slope — how far up/down is it versus where I grip now. No extra cast.
+    </div>
+
+    <h3>// The slope measurement</h3>
+    <p>Each step, take the vertical difference between the new edge height and the current grip height:</p>
+    <pre data-lang="GDScript"><code><span class="kw">var</span> <span class="vr">step_dy</span> = <span class="vr">ledge_hit</span>.position.y - <span class="vr">current_grip_y</span>
+<span class="kw">var</span> <span class="vr">slope</span> = <span class="fn">abs</span>(<span class="vr">step_dy</span>)</code></pre>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>slope vs limit</th><th>meaning</th><th>action</th></tr></thead>
+        <tbody>
+          <tr><td class="yes">slope ≤ MAX_DIAGONAL</td><td>gentle diagonal</td><td class="yes">CONTINUE — shimmy across AND adjust char Y by step_dy</td></tr>
+          <tr><td class="no">slope &gt; MAX_DIAGONAL</td><td>too steep — edge drops/rises sharply</td><td class="no">treat as BLOCKED → CASE 2/3 (stop)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout warning">
+      <strong>Don't Forget The Y Update</strong>
+      A diagonal shimmy moves the character sideways <em>and vertically</em>. If you only move sideways, the hands detach from the rising/falling edge. Apply <code>step_dy</code> to the character's Y every step so the grip tracks the real edge — the same "re-grip each frame" idea as the stair snap.
+    </div>
+
+    <h3>// Why "too steep" collapses into Case 2/3</h3>
+    <p>An extreme diagonal is, in practice, the ledge ending or turning into a wall — there is no longer a sensible horizontal edge to hand-over-hand along. Rather than inventing a sixth case, we fold it into the existing "stop" outcomes: it reads like a cut (Case 3) or a block (Case 2) and uses the same reach-and-stop animation.</p>
+
+    <div class="ledge-diag" style="background:var(--code-bg);border:1px solid var(--border);padding:18px;margin:16px 0;border-radius:2px;">
+      <svg viewBox="0 0 600 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;">
+        <!-- SIDE VIEW this time, not top-down -->
+        <text x="300" y="16" fill="#5a6a82" font-family="monospace" font-size="10" text-anchor="middle">SIDE VIEW — shimmying right, edge drifts down</text>
+        <!-- gentle diagonal (left half) -->
+        <path d="M 20 70 L 200 95 L 200 200 L 20 200 Z" fill="#2a3450" stroke="#7a8aa0" stroke-width="1"/>
+        <line x1="20" y1="70" x2="200" y2="95" stroke="#9fb0c8" stroke-width="2"/>
+        <!-- player grip current -->
+        <circle cx="70" cy="78" r="7" fill="#fff"/>
+        <!-- ledge probe down at next position -->
+        <line x1="120" y1="50" x2="120" y2="83" stroke="#ffd447" stroke-width="2"/>
+        <circle cx="120" cy="83" r="3" fill="#ffd447"/>
+        <!-- step_dy bracket -->
+        <line x1="135" y1="78" x2="135" y2="83" stroke="#47ffd4" stroke-width="1.5"/>
+        <text x="160" y="84" fill="#47ffd4" font-family="monospace" font-size="9">small dy ✓</text>
+        <text x="110" y="135" fill="#47aaff" font-family="monospace" font-size="9" text-anchor="middle">CONTINUE + shift Y</text>
+
+        <!-- divider -->
+        <line x1="300" y1="30" x2="300" y2="185" stroke="#1e2d4a" stroke-width="1" stroke-dasharray="4 4"/>
+
+        <!-- extreme diagonal (right half) -->
+        <path d="M 330 60 L 430 60 L 470 200 L 330 200 Z" fill="#2a3450" stroke="#7a8aa0" stroke-width="1"/>
+        <line x1="330" y1="60" x2="430" y2="60" stroke="#9fb0c8" stroke-width="2"/>
+        <line x1="430" y1="60" x2="470" y2="200" stroke="#9fb0c8" stroke-width="2"/>
+        <circle cx="370" cy="68" r="7" fill="#fff"/>
+        <!-- probe finds a hit far below -->
+        <line x1="450" y1="50" x2="450" y2="160" stroke="#ffd447" stroke-width="2"/>
+        <circle cx="450" cy="160" r="3" fill="#ffd447"/>
+        <line x1="465" y1="68" x2="465" y2="160" stroke="#ff6b6b" stroke-width="1.5"/>
+        <text x="478" y="120" fill="#ff6b6b" font-family="monospace" font-size="9">dy &gt; limit ✗</text>
+        <text x="400" y="185" fill="#ff6b6b" font-family="monospace" font-size="9" text-anchor="middle">too steep → STOP (case 2/3)</text>
+      </svg>
+    </div>
+
+    <pre data-lang="GDScript · settings"><code><span class="cm"># Max vertical change per shimmy step before the ledge counts as</span>
+<span class="cm"># "too steep" and we stop. Tune to taste. (metres)</span>
+<span class="kw">@export</span> <span class="kw">var</span> <span class="vr">MAX_DIAGONAL</span>: <span class="kw">float</span> = <span class="nm">0.25</span></code></pre>
+  </section>
+
+  <!-- 08 TRUTH TABLE -->
+  <section id="truthtable">
+    <h2><span class="num">08</span> Decision Truth Table</h2>
+    <p>The two core booleans give you four buckets. The corner probe only fires to disambiguate the two "mixed" rows.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>wall ahead</th><th>ledge ahead</th><th>corner probe</th><th>outcome</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="yes">YES</td><td class="yes">YES</td><td>—</td><td class="yes">CONTINUE — normal shimmy</td></tr>
+          <tr><td class="yes">YES</td><td class="no">NO</td><td class="opt">inner check</td><td class="opt">INNER_CORNER (case 4, hole) if edge turns in, else BLOCKED (cut)</td></tr>
+          <tr><td class="no">NO</td><td class="yes">YES</td><td class="opt">outer check</td><td class="opt">OUTER_CORNER (case 5, box) if new face, else BLOCKED</td></tr>
+          <tr><td class="no">NO</td><td class="no">NO</td><td>—</td><td class="no">BLOCKED — end of ledge</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <pre data-lang="GDScript · pseudocode"><code><span class="kw">func</span> <span class="fn">check_shimmy</span>(<span class="vr">dir</span>):   <span class="cm"># dir = +1 right, -1 left</span>
+    <span class="kw">var</span> <span class="vr">wall</span>  = <span class="fn">probe_wall</span>(<span class="vr">dir</span>)    <span class="cm"># ray forward, offset sideways</span>
+    <span class="kw">var</span> <span class="vr">ledge</span> = <span class="fn">probe_ledge</span>(<span class="vr">dir</span>)   <span class="cm"># ray down, offset sideways</span>
+
+    <span class="kw">if</span> <span class="vr">wall</span> <span class="kw">and</span> <span class="vr">ledge</span>:
+        <span class="kw">return</span> <span class="sg">CONTINUE</span>
+
+    <span class="kw">if</span> <span class="vr">wall</span> <span class="kw">and</span> <span class="kw">not</span> <span class="vr">ledge</span>:
+        <span class="kw">if</span> <span class="fn">probe_inner_corner</span>(<span class="vr">dir</span>):
+            <span class="kw">return</span> <span class="sg">INNER_CORNER</span>      <span class="cm"># case 4 (hole)</span>
+        <span class="kw">return</span> <span class="bl">BLOCKED</span>                  <span class="cm"># case 3 (cut)</span>
+
+    <span class="kw">if</span> <span class="kw">not</span> <span class="vr">wall</span> <span class="kw">and</span> <span class="vr">ledge</span>:
+        <span class="kw">if</span> <span class="fn">probe_outer_corner</span>(<span class="vr">dir</span>):
+            <span class="kw">return</span> <span class="sg">OUTER_CORNER</span>      <span class="cm"># case 5 (box)</span>
+        <span class="kw">return</span> <span class="bl">BLOCKED</span>
+
+    <span class="kw">return</span> <span class="bl">BLOCKED</span>                      <span class="cm"># case 2</span></code></pre>
+  </section>
+
+  <!-- 06 STATES -->
+  <section id="states">
+    <h2><span class="num">09</span> Outcomes &amp; Animation</h2>
+    <p>Each outcome drives both movement and a clip. The two corners move in a complex way (rotate + translate around the edge) and look best with root motion; CONTINUE and BLOCKED can be driven by position directly.</p>
+
+    <div class="states">
+      <div class="state-row">
+        <span class="state-name">CONTINUE</span>
+        <span class="state-arrow">→</span>
+        <span class="state-desc">move sideways one step</span>
+        <span class="state-trigger">shimmy_right / shimmy_left loop</span>
+      </div>
+      <div class="state-row">
+        <span class="state-name">BLOCKED</span>
+        <span class="state-arrow">→</span>
+        <span class="state-desc">stop, hold position</span>
+        <span class="state-trigger">hang_idle / reach-and-stop</span>
+      </div>
+      <div class="state-row">
+        <span class="state-name">OUTER_CORNER</span>
+        <span class="state-arrow">→</span>
+        <span class="state-desc">rotate ~90° out, reposition onto new face</span>
+        <span class="state-trigger">corner_out <span class="badge reuse">root motion</span></span>
+      </div>
+      <div class="state-row">
+        <span class="state-name">INNER_CORNER</span>
+        <span class="state-arrow">→</span>
+        <span class="state-desc">rotate ~90° in, reposition into corner</span>
+        <span class="state-trigger">corner_in <span class="badge reuse">root motion</span></span>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <strong>Why Root Motion for Corners</strong>
+      The hand contact point must land on the actual new edge. If you lerp position manually, the hands float or clip. Letting the corner animation carry the body (root motion) keeps the grip looking planted, the same reason pro parkour uses it.
+    </div>
+  </section>
+
+  <!-- 07 TIPS -->
+  <section id="tips">
+    <h2><span class="num">10</span> Implementation Notes</h2>
+    <ul class="checklist">
+      <li>Offset the wall &amp; ledge probes sideways by <strong>slightly more than one shimmy step</strong> — you are testing the spot you're about to enter, not your current spot.</li>
+      <li>Too small an offset = you walk into a wall before detecting it. Too large = corners trigger early. Tune this one number first.</li>
+      <li>Re-grip every frame with a down-cast onto the edge (same as your stair snap) so small height variation along the ledge is absorbed automatically.</li>
+      <li>Corners need <strong>two casts in sequence</strong>; outer = sideways-then-forward, inner = forward-then-sideways.</li>
+      <li>Add a debug toggle that prints <span style="color:var(--accent)">wall/ledge/corner</span> booleans each step — exactly like the stair debug. The corner logic is far easier to tune when you can see the raw results.</li>
+      <li>Cases 2 and 3 can share a "stop" outcome to start; split them later only if you want distinct animations.</li>
+    </ul>
+
+    <div class="callout blue">
+      <strong>Build Order Suggestion</strong>
+      1) straight shimmy + BLOCKED only (cases 1–3). 2) add outer corner. 3) add inner corner last — it is the fiddliest. Each step is testable on its own.
+    </div>
+  </section>
+
+  <footer>
+    <span>// Ledge Shimmy System — concept reference</span>
+    <span>Godot 4 · GDScript · top-down diagrams</span>
+  </footer>
+
+</div>
+</body>
+</html>
